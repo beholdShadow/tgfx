@@ -64,6 +64,7 @@ std::shared_ptr<Typeface> Typeface::MakeFromName(const std::string& fontFamily,
   return typeface;
 }
 
+#ifndef TGFX_USE_FREETYPE
 std::shared_ptr<Typeface> Typeface::MakeFromPath(const std::string& fontPath, int) {
   CGDataProviderRef cgDataProvider = CGDataProviderCreateWithFilename(fontPath.c_str());
   if (cgDataProvider == nullptr) {
@@ -111,6 +112,7 @@ std::shared_ptr<Typeface> Typeface::MakeFromData(std::shared_ptr<Data> data, int
   CFRelease(cfData);
   return typeface;
 }
+#endif
 
 std::shared_ptr<CGTypeface> CGTypeface::Make(CTFontRef ctFont, std::shared_ptr<Data> data) {
   if (ctFont == nullptr) {

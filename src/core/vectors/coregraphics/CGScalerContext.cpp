@@ -74,11 +74,19 @@ static CGAffineTransform GetTransform(bool fauxItalic) {
   return fauxItalic ? italicTransform : identityTransform;
 }
 
+#ifdef TGFX_USE_FREETYPE 
+std::shared_ptr<ScalerContext> ScalerContext::CreateNative(std::shared_ptr<Typeface> typeface,
+                                                        float size) {
+  DEBUG_ASSERT(typeface != nullptr);
+  return std::make_shared<CGScalerContext>(std::move(typeface), size);
+}
+#else 
 std::shared_ptr<ScalerContext> ScalerContext::CreateNew(std::shared_ptr<Typeface> typeface,
                                                         float size) {
   DEBUG_ASSERT(typeface != nullptr);
   return std::make_shared<CGScalerContext>(std::move(typeface), size);
 }
+#endif
 
 CGScalerContext::CGScalerContext(std::shared_ptr<Typeface> tf, float size)
     : ScalerContext(std::move(tf), size) {

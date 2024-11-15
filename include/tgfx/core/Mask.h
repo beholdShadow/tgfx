@@ -41,6 +41,9 @@ class Mask {
    * Returns nullptr if allocation fails.
    */
   static std::shared_ptr<Mask> Make(int width, int height, bool tryHardware = true);
+#ifdef TGFX_USE_FREETYPE
+  static std::shared_ptr<Mask> MakeNative(int width, int height, bool tryHardware = true);
+#endif
 
   virtual ~Mask() = default;
 

@@ -63,6 +63,8 @@ class EmptyTypeface : public Typeface {
     return nullptr;
   }
 
+  Type getType() const override { return Native;}
+  
  private:
   uint32_t _uniqueID = UniqueID::Next();
 };

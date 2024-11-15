@@ -25,10 +25,12 @@
 #include "tgfx/core/UTF.h"
 
 namespace tgfx {
+#if (defined(__APPLE__) || defined(__EMSCRIPTEN__)) && (!defined(TGFX_FREETYPE_NATIVE))
 std::shared_ptr<Typeface> Typeface::MakeFromName(const std::string& fontFamily,
                                                  const std::string& fontStyle) {
   return SystemFont::MakeFromName(fontFamily, fontStyle);
 }
+#endif
 
 std::shared_ptr<Typeface> Typeface::MakeFromPath(const std::string& fontPath, int ttcIndex) {
   return FTTypeface::Make(FTFontData(fontPath, ttcIndex));

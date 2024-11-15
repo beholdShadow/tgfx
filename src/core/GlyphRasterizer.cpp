@@ -35,6 +35,11 @@ GlyphRasterizer::~GlyphRasterizer() {
 
 std::shared_ptr<ImageBuffer> GlyphRasterizer::onMakeBuffer(bool tryHardware) const {
   auto mask = Mask::Make(width(), height(), tryHardware);
+#if defined(TGFX_USE_FREETYPE) && defined(TGFX_FREETYPE_NATIVE)
+  if (glyphRunList->isNative()) {
+    mask = Mask::MakeNative(width(), height(), tryHardware);
+  }
+#endif
   if (!mask) {
     return nullptr;
   }

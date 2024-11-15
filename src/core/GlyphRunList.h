@@ -61,6 +61,10 @@ class GlyphRunList {
     return _glyphRuns[0].font.hasOutlines();
   }
 
+  bool isNative() const {
+    return _glyphRuns[0].font.getTypeface()->getType() == Typeface::Type::Native;
+  }
+
   /**
    * Returns the glyph runs in the text blob.
    */

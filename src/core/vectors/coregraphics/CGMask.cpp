@@ -49,7 +49,7 @@ static void Iterator(PathVerb verb, const Point points[4], void* info) {
   }
 }
 
-std::shared_ptr<Mask> Mask::Make(int width, int height, bool tryHardware) {
+std::shared_ptr<Mask> _Make(int width, int height, bool tryHardware) {
   auto pixelRef = PixelRef::Make(width, height, true, tryHardware);
   if (pixelRef == nullptr) {
     return nullptr;
@@ -57,6 +57,16 @@ std::shared_ptr<Mask> Mask::Make(int width, int height, bool tryHardware) {
   pixelRef->clear();
   return std::make_shared<CGMask>(std::move(pixelRef));
 }
+
+#ifdef TGFX_USE_FREETYPE
+std::shared_ptr<Mask> Mask::MakeNative(int width, int height, bool tryHardware) {
+  return _Make(width, height, tryHardware);
+}
+#else
+std::shared_ptr<Mask> Mask::Make(int width, int height, bool tryHardware) {
+  return _Make(width, height, tryHardware);
+}
+#endif
 
 static void DrawPath(const Path& path, CGContextRef cgContext, const ImageInfo& info,
                      bool antiAlias) {

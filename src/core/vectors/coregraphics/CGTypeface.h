@@ -60,6 +60,10 @@ class CGTypeface : public Typeface {
 
   std::shared_ptr<Data> copyTableData(FontTableTag tag) const override;
 
+  Type getType() const override {
+    return Native;
+  }
+
  private:
   CGTypeface(CTFontRef ctFont, std::shared_ptr<Data> data);
 

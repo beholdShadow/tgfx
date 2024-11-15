@@ -26,7 +26,7 @@
 using namespace emscripten;
 
 namespace tgfx {
-std::shared_ptr<Mask> Mask::Make(int width, int height, bool) {
+std::shared_ptr<Mask> _Make(int width, int height) {
   auto canvas = val::module_property("tgfx").call<val>("createCanvas2D", width, height);
   if (!canvas.as<bool>()) {
     return nullptr;
@@ -46,6 +46,16 @@ std::shared_ptr<Mask> Mask::Make(int width, int height, bool) {
   }
   return std::make_shared<WebMask>(std::move(buffer), std::move(stream), webMask);
 }
+
+#ifdef TGFX_USE_FREETYPE
+std::shared_ptr<Mask> Mask::MakeNative(int width, int height, bool) {
+  return _Make(width, height);
+}
+#else
+std::shared_ptr<Mask> Mask::Make(int width, int height, bool) {
+  return _Make(width, height);
+}
+#endif
 
 WebMask::WebMask(std::shared_ptr<ImageBuffer> buffer, std::shared_ptr<WebImageStream> stream,
                  emscripten::val webMask)

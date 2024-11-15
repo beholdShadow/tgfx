@@ -30,6 +30,7 @@ std::shared_ptr<Typeface> Typeface::MakeFromName(const std::string& name,
   return WebTypeface::Make(name, style);
 }
 
+#ifndef TGFX_USE_FREETYPE
 std::shared_ptr<Typeface> Typeface::MakeFromPath(const std::string&, int) {
   return nullptr;
 }
@@ -41,6 +42,7 @@ std::shared_ptr<Typeface> Typeface::MakeFromBytes(const void*, size_t, int) {
 std::shared_ptr<Typeface> Typeface::MakeFromData(std::shared_ptr<Data>, int) {
   return nullptr;
 }
+#endif
 
 std::shared_ptr<WebTypeface> WebTypeface::Make(const std::string& name, const std::string& style) {
   auto scalerContextClass = val::module_property("ScalerContext");

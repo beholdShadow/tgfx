@@ -73,6 +73,9 @@ class ScalerContext {
 
  private:
   static std::shared_ptr<ScalerContext> CreateNew(std::shared_ptr<Typeface> typeface, float size);
+#ifdef TGFX_USE_FREETYPE
+  static std::shared_ptr<ScalerContext> CreateNative(std::shared_ptr<Typeface> typeface, float size);
+#endif    
 
   friend class Font;
 };

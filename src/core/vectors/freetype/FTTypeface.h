@@ -54,6 +54,10 @@ class FTTypeface : public Typeface {
 
   std::shared_ptr<Data> copyTableData(FontTableTag tag) const override;
 
+  Type getType() const override {
+    return FreeType;
+  }
+
  private:
   uint32_t _uniqueID = 0;
   FTFontData data;

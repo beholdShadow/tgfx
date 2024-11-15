@@ -47,10 +47,21 @@ static FT_Fixed FloatToFTFixed(float x) {
   return static_cast<FT_Fixed>(x * (1 << 16));
 }
 
+#ifndef TGFX_FREETYPE_NATIVE 
+std::shared_ptr<ScalerContext> ScalerContext::CreateNative([[maybe_unused]]std::shared_ptr<Typeface> typeface,
+                                                        [[maybe_unused]]float size) {
+  return nullptr;
+}
+#endif
+
 std::shared_ptr<ScalerContext> ScalerContext::CreateNew(std::shared_ptr<Typeface> typeface,
                                                         float size) {
   DEBUG_ASSERT(typeface != nullptr);
+#if defined(TGFX_FREETYPE_NATIVE)
+  return typeface->getType() == Typeface::Type::Native? ScalerContext::CreateNative(std::move(typeface), size) : std::make_shared<FTScalerContext>(std::move(typeface), size);
+#else
   return std::make_shared<FTScalerContext>(std::move(typeface), size);
+#endif
 }
 
 static void ApplyEmbolden(FT_Face face, FT_GlyphSlot glyph, GlyphID glyphId, FT_Int32 glyphFlags) {

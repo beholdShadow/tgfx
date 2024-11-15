@@ -130,12 +130,18 @@ class Typeface {
    */
   virtual std::shared_ptr<Data> copyTableData(FontTableTag tag) const = 0;
 
+  enum Type {
+      Native = 0,
+      FreeType = 1
+  };
+  virtual Type getType() const = 0;
+
  protected:
   mutable std::mutex locker = {};
 
  private:
   std::unordered_map<float, std::weak_ptr<ScalerContext>> scalerContexts = {};
-
+  
   friend class ScalerContext;
 };
 }  // namespace tgfx

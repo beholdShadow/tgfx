@@ -25,7 +25,7 @@ using namespace emscripten;
 
 namespace tgfx {
 
-std::shared_ptr<ScalerContext> ScalerContext::CreateNew(std::shared_ptr<Typeface> typeface,
+std::shared_ptr<ScalerContext> _CreateNew(std::shared_ptr<Typeface> typeface,
                                                         float size) {
   DEBUG_ASSERT(typeface != nullptr);
   auto scalerContextClass = val::module_property("ScalerContext");
@@ -38,6 +38,18 @@ std::shared_ptr<ScalerContext> ScalerContext::CreateNew(std::shared_ptr<Typeface
   }
   return std::make_shared<WebScalerContext>(std::move(typeface), size, std::move(scalerContext));
 }
+
+#ifdef TGFX_USE_FREETYPE 
+std::shared_ptr<ScalerContext> ScalerContext::CreateNative(std::shared_ptr<Typeface> typeface,
+                                                        float size) {
+  return _CreateNew(std::move(typeface), size); 
+}
+#else 
+std::shared_ptr<ScalerContext> ScalerContext::CreateNew(std::shared_ptr<Typeface> typeface,
+                                                        float size) {
+  return _CreateNew(std::move(typeface), size);
+}
+#endif
 
 WebScalerContext::WebScalerContext(std::shared_ptr<Typeface> typeface, float size,
                                    val scalerContext)
