@@ -22,7 +22,7 @@
 #include "tgfx/core/Image.h"
 #include "tgfx/core/Path.h"
 #include "tgfx/core/Typeface.h"
-
+#include "tgfx/core/GlyphSdf.h"
 namespace tgfx {
 /**
  * Font controls options applied when drawing and measuring text.
@@ -152,7 +152,7 @@ class Font {
    * method.
    */
   std::shared_ptr<Image> getImage(GlyphID glyphID, Matrix* matrix) const;
-
+  std::shared_ptr<GlyphSdf> getImage(GlyphID glyphID) const;
   /**
    * Compares two fonts for equality.
    */

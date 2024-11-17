@@ -22,6 +22,7 @@
 #include "tgfx/core/Image.h"
 #include "tgfx/core/Path.h"
 #include "tgfx/core/Typeface.h"
+#include "tgfx/core/GlyphSdf.h"
 
 namespace tgfx {
 static constexpr float ITALIC_SKEW = -0.20f;
@@ -64,6 +65,7 @@ class ScalerContext {
 
   virtual std::shared_ptr<ImageBuffer> generateImage(GlyphID glyphID, bool tryHardware) const = 0;
 
+  virtual std::shared_ptr<GlyphSdf> generateSdf(GlyphID glyphID) const;
  protected:
   // Note: This could be nullptr.
   std::shared_ptr<Typeface> typeface = nullptr;

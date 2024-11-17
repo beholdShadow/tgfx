@@ -27,7 +27,7 @@
 #include "tgfx/core/Point.h"
 #include "tgfx/core/SamplingOptions.h"
 #include "tgfx/core/TileMode.h"
-
+#include "tgfx/gpu/ShaderVar.h"
 namespace tgfx {
 class FragmentProcessor;
 
@@ -38,6 +38,8 @@ class FragmentProcessor;
  */
 class Shader {
  public:
+  static std::shared_ptr<Shader> MakeCustomShader(std::string fragShader, std::vector<ShaderVar> params);
+  virtual void setCustomParams(std::vector<ShaderVar> params);
   /**
    * Creates a shader that draws the specified color.
    */

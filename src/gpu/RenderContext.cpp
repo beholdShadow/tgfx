@@ -261,11 +261,8 @@ void RenderContext::drawLayer(std::shared_ptr<Picture> picture, const MCState& s
 void RenderContext::drawColorGlyphs(std::shared_ptr<GlyphRunList> glyphRunList,
                                     const MCState& state, const FillStyle& style) {
   auto viewMatrix = state.matrix;
-  auto scale = viewMatrix.getMaxScale();
-  viewMatrix.preScale(1.0f / scale, 1.0f / scale);
   for (auto& glyphRun : glyphRunList->glyphRuns()) {
     auto font = glyphRun.font;
-    font = font.makeWithSize(font.getSize() * scale);
     auto& glyphIDs = glyphRun.glyphs;
     auto glyphCount = glyphIDs.size();
     auto& positions = glyphRun.positions;
@@ -277,7 +274,7 @@ void RenderContext::drawColorGlyphs(std::shared_ptr<GlyphRunList> glyphRunList,
       if (glyphImage == nullptr) {
         continue;
       }
-      glyphState.matrix.postTranslate(position.x * scale, position.y * scale);
+      glyphState.matrix.postTranslate(position.x, position.y);
       glyphState.matrix.postConcat(viewMatrix);
       auto rect = Rect::MakeWH(glyphImage->width(), glyphImage->height());
       drawImageRect(std::move(glyphImage), rect, {}, glyphState, style);

@@ -119,7 +119,6 @@ void ShaderBuilder::finalize(ShaderFlags visibility) {
   }
   shaderStrings[Type::VersionDecl] = programBuilder->versionDeclString();
   shaderStrings[Type::Uniforms] += programBuilder->getUniformDeclarations(visibility);
-  shaderStrings[Type::Inputs] += getDeclarations(inputs, visibility);
   shaderStrings[Type::Outputs] += getDeclarations(outputs, visibility);
   onFinalize();
   // append the 'footer' to code

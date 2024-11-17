@@ -20,7 +20,7 @@
 
 #include <vector>
 #include "gpu/FragmentShaderBuilder.h"
-#include "gpu/ShaderVar.h"
+#include "tgfx/gpu/ShaderVar.h"
 #include "gpu/TextureSampler.h"
 #include "gpu/UniformBuffer.h"
 #include "gpu/UniformHandler.h"

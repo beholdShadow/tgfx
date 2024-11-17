@@ -16,28 +16,24 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "tgfx/core/Shader.h"
-#include "shaders/ColorFilterShader.h"
-#include "shaders/MatrixShader.h"
+#include "CustomShader.h"
+#include "gpu/processors/ConstColorProcessor.h"
 
 namespace tgfx {
-std::shared_ptr<Shader> Shader::makeWithMatrix(const Matrix& viewMatrix) const {
-  return MatrixShader::MakeFrom(weakThis.lock(), viewMatrix);
-}
-
-std::shared_ptr<Shader> Shader::makeWithColorFilter(
-    std::shared_ptr<ColorFilter> colorFilter) const {
-  auto source = weakThis.lock();
-  if (colorFilter == nullptr) {
-    return source;
-  }
-  auto shader = std::make_shared<ColorFilterShader>(std::move(source), std::move(colorFilter));
+std::shared_ptr<Shader> Shader::MakeCustomShader(std::string fragShader, std::vector<ShaderVar> params) {
+  auto shader = std::make_shared<CustomShader>(fragShader, params);
   shader->weakThis = shader;
   return shader;
 }
 
-void Shader::setCustomParams(std::vector<ShaderVar>) {
+void CustomShader::setCustomParams(std::vector<ShaderVar> params) {
+  this->params = std::move(params);
   return;
+}
+
+std::unique_ptr<FragmentProcessor> CustomShader::asFragmentProcessor(const FPArgs&,
+                                                                    const Matrix*) const {
+  return nullptr;
 }
 
 }  // namespace tgfx

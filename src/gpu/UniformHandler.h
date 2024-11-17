@@ -19,7 +19,7 @@
 #pragma once
 
 #include "SamplerHandle.h"
-#include "ShaderVar.h"
+#include "tgfx/gpu/ShaderVar.h"
 #include "Swizzle.h"
 #include "gpu/TextureSampler.h"
 

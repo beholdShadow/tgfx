@@ -50,26 +50,18 @@ Rect GlyphRunList::getBounds(float resolutionScale) const {
   if (resolutionScale <= 0.0f) {
     return Rect::MakeEmpty();
   }
-  auto hasScale = !FloatNearlyEqual(resolutionScale, 1.0f);
   auto totalBounds = Rect::MakeEmpty();
   for (auto& run : _glyphRuns) {
     auto font = run.font;
-    if (hasScale) {
-      // Scale the glyphs before measuring to prevent precision loss with small font sizes.
-      font = font.makeWithSize(font.getSize() * resolutionScale);
-    }
     size_t index = 0;
     auto& positions = run.positions;
     for (auto& glyphID : run.glyphs) {
       auto bounds = font.getBounds(glyphID);
       auto& position = positions[index];
-      bounds.offset(position.x * resolutionScale, position.y * resolutionScale);
+      bounds.offset(position.x, position.y);
       totalBounds.join(bounds);
       index++;
     }
-  }
-  if (hasScale) {
-    totalBounds.scale(1.0f / resolutionScale, 1.0f / resolutionScale);
   }
   return totalBounds;
 }

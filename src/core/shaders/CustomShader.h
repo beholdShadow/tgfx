@@ -16,28 +16,22 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+#pragma once
+
 #include "tgfx/core/Shader.h"
-#include "shaders/ColorFilterShader.h"
-#include "shaders/MatrixShader.h"
 
 namespace tgfx {
-std::shared_ptr<Shader> Shader::makeWithMatrix(const Matrix& viewMatrix) const {
-  return MatrixShader::MakeFrom(weakThis.lock(), viewMatrix);
-}
-
-std::shared_ptr<Shader> Shader::makeWithColorFilter(
-    std::shared_ptr<ColorFilter> colorFilter) const {
-  auto source = weakThis.lock();
-  if (colorFilter == nullptr) {
-    return source;
+class CustomShader : public Shader {
+ public:
+  explicit CustomShader(std::string fragShader, std::vector<ShaderVar> params):fragShader(fragShader), params(std::move(params)) {
   }
-  auto shader = std::make_shared<ColorFilterShader>(std::move(source), std::move(colorFilter));
-  shader->weakThis = shader;
-  return shader;
-}
+  virtual void setCustomParams(std::vector<ShaderVar> params) override;
+ protected:
+  std::unique_ptr<FragmentProcessor> asFragmentProcessor(const FPArgs& args,
+                                                         const Matrix* uvMatrix) const override;
 
-void Shader::setCustomParams(std::vector<ShaderVar>) {
-  return;
-}
-
+ private:
+  std::string fragShader;
+  std::vector<ShaderVar> params;
+};
 }  // namespace tgfx

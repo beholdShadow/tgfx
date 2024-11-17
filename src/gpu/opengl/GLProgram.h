@@ -22,7 +22,7 @@
 #include "GLContext.h"
 #include "gpu/Program.h"
 #include "gpu/ProgramInfo.h"
-#include "gpu/SLType.h"
+#include "tgfx/gpu/SLType.h"
 #include "gpu/opengl/GLRenderTarget.h"
 #include "gpu/opengl/GLUniformHandler.h"
 

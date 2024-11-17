@@ -16,28 +16,12 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "tgfx/core/Shader.h"
-#include "shaders/ColorFilterShader.h"
-#include "shaders/MatrixShader.h"
-
+#pragma once
+#include "tgfx/core/Image.h"
 namespace tgfx {
-std::shared_ptr<Shader> Shader::makeWithMatrix(const Matrix& viewMatrix) const {
-  return MatrixShader::MakeFrom(weakThis.lock(), viewMatrix);
-}
-
-std::shared_ptr<Shader> Shader::makeWithColorFilter(
-    std::shared_ptr<ColorFilter> colorFilter) const {
-  auto source = weakThis.lock();
-  if (colorFilter == nullptr) {
-    return source;
-  }
-  auto shader = std::make_shared<ColorFilterShader>(std::move(source), std::move(colorFilter));
-  shader->weakThis = shader;
-  return shader;
-}
-
-void Shader::setCustomParams(std::vector<ShaderVar>) {
-  return;
-}
-
+struct GlyphSdf {
+    Rect bitmapBox;
+    float sdfPadding;
+    std::shared_ptr<ImageBuffer> buffer;
+};
 }  // namespace tgfx

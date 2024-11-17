@@ -20,7 +20,7 @@
 
 #include <cstdint>
 #include "SamplerHandle.h"
-#include "ShaderVar.h"
+#include "tgfx/gpu/ShaderVar.h"
 
 namespace tgfx {
 class ProgramBuilder;
@@ -98,7 +98,6 @@ class ShaderBuilder {
 
   std::vector<std::string> shaderStrings;
   ProgramBuilder* programBuilder = nullptr;
-  std::vector<ShaderVar> inputs;
   std::vector<ShaderVar> outputs;
   PrivateFeature featuresAddedMask = PrivateFeature::None;
   bool finalized = false;

@@ -58,39 +58,39 @@ struct RasterTarget {
   const uint8_t* gammaTable;
 };
 
-static void SpanFunc(int y, int, const FT_Span* spans, void* user) {
-  auto* target = reinterpret_cast<RasterTarget*>(user);
-  auto* q = target->origin - target->pitch * y + spans->x;
-  auto c = target->gammaTable[spans->coverage];
-  auto aCount = spans->len;
-  /**
-   * For small-spans it is faster to do it by ourselves than calling memset.
-   * This is mainly due to the cost of the function call.
-   */
-  switch (aCount) {
-    case 7:
-      *q++ = c;
-    case 6:
-      *q++ = c;
-    case 5:
-      *q++ = c;
-    case 4:
-      *q++ = c;
-    case 3:
-      *q++ = c;
-    case 2:
-      *q++ = c;
-    case 1:
-      *q = c;
-    case 0:
-      break;
-    default:
-      memset(q, c, aCount);
-  }
-}
+// static void SpanFunc(int y, int, const FT_Span* spans, void* user) {
+//   auto* target = reinterpret_cast<RasterTarget*>(user);
+//   auto* q = target->origin - target->pitch * y + spans->x;
+//   auto c = target->gammaTable[spans->coverage];
+//   auto aCount = spans->len;
+//   /**
+//    * For small-spans it is faster to do it by ourselves than calling memset.
+//    * This is mainly due to the cost of the function call.
+//    */
+//   switch (aCount) {
+//     case 7:
+//       *q++ = c;
+//     case 6:
+//       *q++ = c;
+//     case 5:
+//       *q++ = c;
+//     case 4:
+//       *q++ = c;
+//     case 3:
+//       *q++ = c;
+//     case 2:
+//       *q++ = c;
+//     case 1:
+//       *q = c;
+//     case 0:
+//       break;
+//     default:
+//       memset(q, c, aCount);
+//   }
+// }
 
-void FTMask::onFillPath(const Path& path, const Matrix& matrix, bool antiAlias,
-                        bool needsGammaCorrection) {
+void FTMask::onFillPath(const Path& path, const Matrix& matrix, bool,
+                        bool) {
   if (path.isEmpty()) {
     return;
   }
@@ -112,7 +112,7 @@ void FTMask::onFillPath(const Path& path, const Matrix& matrix, bool antiAlias,
   ftPath.setFillType(path.getFillType());
   auto outlines = ftPath.getOutlines();
   auto ftLibrary = FTLibrary::Get();
-  if (!needsGammaCorrection) {
+  // if (!needsGammaCorrection) {
     FT_Bitmap bitmap;
     bitmap.width = static_cast<unsigned>(info.width());
     bitmap.rows = static_cast<unsigned>(info.height());
@@ -125,29 +125,29 @@ void FTMask::onFillPath(const Path& path, const Matrix& matrix, bool antiAlias,
     }
     pixelRef->unlockPixels();
     return;
-  }
-  auto buffer = static_cast<unsigned char*>(pixels);
-  int rows = info.height();
-  int pitch = static_cast<int>(info.rowBytes());
-  RasterTarget target = {};
-  target.origin = buffer + (rows - 1) * pitch;
-  target.pitch = pitch;
-  target.gammaTable = PixelRefMask::GammaTable().data();
-  FT_Raster_Params params;
-  params.flags = FT_RASTER_FLAG_DIRECT | FT_RASTER_FLAG_CLIP;
-  if (antiAlias) {
-    params.flags |= FT_RASTER_FLAG_AA;
-  }
-  params.gray_spans = SpanFunc;
-  params.user = &target;
-  auto& clip = params.clip_box;
-  clip.xMin = 0;
-  clip.yMin = 0;
-  clip.xMax = (FT_Pos)info.width();
-  clip.yMax = (FT_Pos)info.height();
-  for (auto& outline : outlines) {
-    FT_Outline_Render(ftLibrary, &(outline->outline), &params);
-  }
-  pixelRef->unlockPixels();
+  // }
+  // auto buffer = static_cast<unsigned char*>(pixels);
+  // int rows = info.height();
+  // int pitch = static_cast<int>(info.rowBytes());
+  // RasterTarget target = {};
+  // target.origin = buffer + (rows - 1) * pitch;
+  // target.pitch = pitch;
+  // target.gammaTable = PixelRefMask::GammaTable().data();
+  // FT_Raster_Params params;
+  // params.flags = FT_RASTER_FLAG_DIRECT | FT_RASTER_FLAG_CLIP;
+  // if (antiAlias) {
+  //   params.flags |= FT_RASTER_FLAG_AA;
+  // }
+  // params.gray_spans = SpanFunc;
+  // params.user = &target;
+  // auto& clip = params.clip_box;
+  // clip.xMin = 0;
+  // clip.yMin = 0;
+  // clip.xMax = (FT_Pos)info.width();
+  // clip.yMax = (FT_Pos)info.height();
+  // for (auto& outline : outlines) {
+  //   FT_Outline_Render(ftLibrary, &(outline->outline), &params);
+  // }
+  // pixelRef->unlockPixels();
 }
 }  // namespace tgfx

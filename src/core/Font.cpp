@@ -147,6 +147,31 @@ std::shared_ptr<Image> Font::getImage(GlyphID glyphID, Matrix* matrix) const {
   return Image::MakeFrom(std::move(generator));
 }
 
+std::shared_ptr<GlyphSdf> Font::getImage(GlyphID glyphID) const {
+  if (glyphID == 0) {
+    return nullptr;
+  }
+  return scalerContext->generateSdf(glyphID);
+}
+
+// std::shared_ptr<Image> Font::getImage(GlyphID glyphID) const {
+//   if (glyphID == 0) {
+//     return nullptr;
+//   }
+//   auto bounds = scalerContext->getImageTransform(glyphID, matrix);
+//   if (bounds.isEmpty()) {
+//     return nullptr;
+//   }
+//   if (matrix && fauxItalic) {
+//     matrix->postSkew(ITALIC_SKEW, 0);
+//   }
+//   auto width = static_cast<int>(ceilf(bounds.width()));
+//   auto height = static_cast<int>(ceilf(bounds.height()));
+//   auto generator = std::make_shared<GlyphImageGenerator>(width, height, scalerContext, glyphID);
+//   std::shared_ptr<ImageBuffer> buffer = scalerContext->generateImage(glyphID, tryHardware)
+//   return;
+// }
+
 bool Font::operator==(const Font& font) const {
   return scalerContext->typeface == font.scalerContext->typeface &&
          scalerContext->textSize == font.scalerContext->textSize && fauxBold == font.fauxBold &&

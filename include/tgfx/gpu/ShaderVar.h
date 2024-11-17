@@ -20,8 +20,8 @@
 
 #include <string>
 #include <vector>
-#include "BitmaskOperators.h"
 #include "SLType.h"
+#include "BitmaskOperators.h"
 
 namespace tgfx {
 enum class ShaderFlags : unsigned {
