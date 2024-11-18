@@ -17,6 +17,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "RenderPass.h"
+#include "core/utils/Log.h"
 
 namespace tgfx {
 bool RenderPass::begin(std::shared_ptr<RenderTargetProxy> renderTargetProxy) {
@@ -78,14 +79,26 @@ void RenderPass::draw(PrimitiveType primitiveType, size_t baseVertex, size_t ver
   if (drawPipelineStatus != DrawPipelineStatus::Ok) {
     return;
   }
-  onDraw(primitiveType, baseVertex, vertexCount);
+  size_t maxCount = context->caps()->maxBufferVertices;
+  size_t n = vertexCount / maxCount + 1;
+  size_t lastCount = vertexCount % maxCount;
+  for (int i = 0; i < n; i++) {
+    // LOGE("RenderPass::draw base : %d, count : %d", baseVertex + i * maxCount, i == n - 1 ? lastCount : maxCount); 
+    onDraw(primitiveType, baseVertex + i * maxCount, i == n - 1 ? lastCount : maxCount);
+  }
 }
 
 void RenderPass::drawIndexed(PrimitiveType primitiveType, size_t baseIndex, size_t indexCount) {
   if (drawPipelineStatus != DrawPipelineStatus::Ok) {
     return;
   }
-  onDrawIndexed(primitiveType, baseIndex, indexCount);
+  size_t maxCount = context->caps()->maxBufferVertices;
+  size_t n = indexCount / maxCount + 1;
+  size_t lastCount = indexCount % maxCount;
+  for (int i = 0; i < n; i++) {
+    // LOGE("RenderPass::draw base : %d, count : %d", baseVertex + i * maxCount, i == n - 1 ? lastCount : maxCount); 
+    onDrawIndexed(primitiveType, baseIndex + i * maxCount, i == n - 1 ? lastCount : maxCount);
+  }
 }
 
 void RenderPass::clear(const Rect& scissor, Color color) {

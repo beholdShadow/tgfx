@@ -16,24 +16,37 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "CustomShader.h"
-#include "gpu/processors/CustomEffectProcessor.h"
+#pragma once
+
+#include "gpu/processors/FragmentProcessor.h"
+#include "tgfx/core/Color.h"
 
 namespace tgfx {
-std::shared_ptr<Shader> Shader::MakeCustomShader(const std::string& fragShader, std::vector<ShaderVar> params) {
-  auto shader = std::make_shared<CustomShader>(fragShader, std::move(params));
-  shader->weakThis = shader;
-  return shader;
-}
+class CustomEffectProcessor : public FragmentProcessor {
+ public:
+  static std::unique_ptr<CustomEffectProcessor> Make(const std::string& fragShader, const std::vector<ShaderVar>& params);
 
-void CustomShader::setCustomParams(const std::vector<ShaderVar>& params) {
-  this->params = params;
-  return;
-}
+  std::string name() const override {
+    return "CustomEffectProcessor";
+  }
 
-std::unique_ptr<FragmentProcessor> CustomShader::asFragmentProcessor(const FPArgs&,
-                                                                    const Matrix*) const {
-  return CustomEffectProcessor::Make(this->fragShader, this->params);
-}
+  void onComputeProcessorKey(BytesKey* bytesKey) const override;
 
+  void emitCode(EmitArgs& args) const override;
+
+ private:
+  void onSetData(UniformBuffer* uniformBuffer) const override;
+
+ protected:
+  DEFINE_PROCESSOR_CLASS_ID
+
+  CustomEffectProcessor(const std::string& fragShader, const std::vector<ShaderVar>& params)
+      : FragmentProcessor(ClassID()), fragShader(fragShader), params(params) {
+  }
+
+  bool onIsEqual(const FragmentProcessor& processor) const override;
+
+  std::string fragShader;
+  std::vector<ShaderVar> params;
+};
 }  // namespace tgfx

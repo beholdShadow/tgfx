@@ -25,7 +25,7 @@ class CustomShader : public Shader {
  public:
   explicit CustomShader(std::string fragShader, std::vector<ShaderVar> params):fragShader(fragShader), params(std::move(params)) {
   }
-  virtual void setCustomParams(std::vector<ShaderVar> params) override;
+  virtual void setCustomParams(const std::vector<ShaderVar>& params) override;
  protected:
   std::unique_ptr<FragmentProcessor> asFragmentProcessor(const FPArgs& args,
                                                          const Matrix* uvMatrix) const override;

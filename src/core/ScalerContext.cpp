@@ -89,7 +89,7 @@ ScalerContext::ScalerContext(std::shared_ptr<Typeface> typeface, float size)
     : typeface(std::move(typeface)), textSize(size) {
 }
 
-std::shared_ptr<GlyphSdf> ScalerContext::generateSdf(GlyphID glyphID) const {
+std::shared_ptr<GlyphSdf> ScalerContext::generateSdf(GlyphID glyphID, bool fauxBold, bool fauxItalic) const {
   return nullptr;
 }
 }  // namespace tgfx

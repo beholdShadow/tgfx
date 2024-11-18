@@ -37,13 +37,7 @@ static constexpr int AA_TESSELLATOR_MAX_VERB_COUNT = 100;
 static constexpr int AA_TESSELLATOR_BUFFER_SIZE_FACTOR = 170;
 
 bool PathTriangulator::ShouldTriangulatePath(const Path& path) {
-  if (path.countVerbs() <= AA_TESSELLATOR_MAX_VERB_COUNT) {
-    return true;
-  }
-  auto bounds = path.getBounds();
-  auto width = static_cast<int>(ceilf(bounds.width()));
-  auto height = static_cast<int>(ceilf(bounds.height()));
-  return path.countPoints() * AA_TESSELLATOR_BUFFER_SIZE_FACTOR <= width * height;
+  return true;
 }
 
 size_t PathTriangulator::GetTriangleCount(size_t bufferSize) {

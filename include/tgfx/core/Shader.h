@@ -38,8 +38,10 @@ class FragmentProcessor;
  */
 class Shader {
  public:
-  static std::shared_ptr<Shader> MakeCustomShader(std::string fragShader, std::vector<ShaderVar> params);
-  virtual void setCustomParams(std::vector<ShaderVar> params);
+  static std::shared_ptr<Shader> MakeCustomShader(const std::string& fragShader, std::vector<ShaderVar> params);
+
+  virtual void setCustomParams(const std::vector<ShaderVar>& params);
+  
   /**
    * Creates a shader that draws the specified color.
    */

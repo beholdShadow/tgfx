@@ -53,7 +53,7 @@ std::shared_ptr<Data> ShapeRasterizer::makeTriangles(const Path& finalPath) cons
     // The path is not a filled path, or it is invisible.
     return nullptr;
   }
-  return Data::MakeWithCopy(vertices.data(), vertices.size() * sizeof(float));
+  return DataVector<float>::MakeAdopted(vertices);
 }
 
 std::shared_ptr<ImageBuffer> ShapeRasterizer::makeImageBuffer(const Path& finalPath,

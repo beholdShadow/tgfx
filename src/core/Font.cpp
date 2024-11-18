@@ -151,7 +151,7 @@ std::shared_ptr<GlyphSdf> Font::getImage(GlyphID glyphID) const {
   if (glyphID == 0) {
     return nullptr;
   }
-  return scalerContext->generateSdf(glyphID);
+  return scalerContext->generateSdf(glyphID, fauxBold, fauxItalic);
 }
 
 // std::shared_ptr<Image> Font::getImage(GlyphID glyphID) const {

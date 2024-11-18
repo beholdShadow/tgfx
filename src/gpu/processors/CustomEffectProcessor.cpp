@@ -16,24 +16,30 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "CustomShader.h"
 #include "gpu/processors/CustomEffectProcessor.h"
 
 namespace tgfx {
-std::shared_ptr<Shader> Shader::MakeCustomShader(const std::string& fragShader, std::vector<ShaderVar> params) {
-  auto shader = std::make_shared<CustomShader>(fragShader, std::move(params));
-  shader->weakThis = shader;
-  return shader;
+std::unique_ptr<CustomEffectProcessor> CustomEffectProcessor::Make(const std::string& fragShader, const std::vector<ShaderVar>& params) {
+  return std::unique_ptr<CustomEffectProcessor>(new CustomEffectProcessor(fragShader, params));
 }
 
-void CustomShader::setCustomParams(const std::vector<ShaderVar>& params) {
-  this->params = params;
-  return;
+void CustomEffectProcessor::onComputeProcessorKey(BytesKey* bytesKey) const {
 }
 
-std::unique_ptr<FragmentProcessor> CustomShader::asFragmentProcessor(const FPArgs&,
-                                                                    const Matrix*) const {
-  return CustomEffectProcessor::Make(this->fragShader, this->params);
+bool CustomEffectProcessor::onIsEqual(const FragmentProcessor& processor) const {
+  return false;
+}
+
+void CustomEffectProcessor::emitCode(EmitArgs& args) const {
+  auto* fragBuilder = args.fragBuilder;
+  fragBuilder->addFunction(this->fragShader);
+  // auto colorName = args.uniformHandler->addUniform(ShaderFlags::Fragment, SLType::Float4, "Color");
+  fragBuilder->codeAppendf("%s = customFunction(%s);", args.outputColor.c_str(), args.inputColor.c_str());
+}
+
+void CustomEffectProcessor::onSetData(UniformBuffer* uniformBuffer) const {
+  // Color color{1.0, 0.0, 0.0, 1.0};
+  // uniformBuffer->setData("Color", color);
 }
 
 }  // namespace tgfx

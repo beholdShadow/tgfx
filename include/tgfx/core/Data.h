@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace tgfx {
 /**
@@ -32,7 +33,7 @@ class Data {
    * Creates a Data object from the specified file path.
    */
   static std::shared_ptr<Data> MakeFromFile(const std::string& filePath);
-
+  
   /**
    * Creates a Data object by copying the specified data.
    */
@@ -67,8 +68,8 @@ class Data {
    */
   static std::shared_ptr<Data> MakeAdopted(const void* data, size_t length,
                                            ReleaseProc releaseProc = DeleteProc,
-                                           void* context = nullptr);
-
+                                           void* context = nullptr);    
+                                           
   /**
    *  Creates a new empty Data object.
    */
@@ -105,13 +106,30 @@ class Data {
     return _size == 0;
   }
 
- private:
+ protected:
   const void* _data = nullptr;
   size_t _size = 0;
   ReleaseProc releaseProc = nullptr;
   void* releaseContext = nullptr;
 
   Data(const void* data, size_t length, ReleaseProc releaseProc, void* context);
+};
+
+template <typename T>
+class DataVector : public Data {
+public:                             
+  static std::shared_ptr<Data> MakeAdopted(std::vector<T>& vec) {
+    if (vec.size() == 0) {
+      return MakeEmpty();
+    }
+    auto data = new DataVector<T>(vec);
+    return std::shared_ptr<Data>(data);
+  }
+private:
+  std::vector<T> extraVec;
+  DataVector(std::vector<T>& vec)
+      : Data(vec.data(), vec.size() * sizeof(T), nullptr, nullptr), extraVec(std::move(vec)) {
+  }
 };
 
 }  // namespace tgfx

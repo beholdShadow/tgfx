@@ -624,7 +624,7 @@ bool FTScalerContext::loadBitmapGlyph(GlyphID glyphID, FT_Int32 glyphFlags) cons
   return ftBitmap.pixel_mode == FT_PIXEL_MODE_BGRA || ftBitmap.pixel_mode == FT_PIXEL_MODE_GRAY;
 }
 
-std::shared_ptr<GlyphSdf> FTScalerContext::generateSdf(GlyphID glyphID) const {
+std::shared_ptr<GlyphSdf> FTScalerContext::generateSdf(GlyphID glyphID, bool fauxBold, bool fauxItalic) const {
   std::lock_guard<std::mutex> autoLock(ftTypeface()->locker);
   auto glyphFlags = loadGlyphFlags;
   glyphFlags |= FT_LOAD_RENDER;
@@ -666,6 +666,10 @@ std::shared_ptr<GlyphSdf> FTScalerContext::generateSdf(GlyphID glyphID) const {
     dst += dstRB;
   }
   sdfInfo->buffer = std::move(bitmap.makeBuffer());
+
+  sdfInfo->path = std::make_shared<Path>();
+  generatePath(glyphID, fauxBold, fauxItalic, sdfInfo->path.get());
+  
   return sdfInfo;
 }
 
