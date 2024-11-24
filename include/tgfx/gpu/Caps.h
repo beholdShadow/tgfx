@@ -40,7 +40,7 @@ class Caps {
 
   bool floatIs32Bits = true;
   int maxTextureSize = 0;
-  int maxBufferVertices = 99; //default 16bit vertics
+  size_t maxBufferVertices = 99; //default 16bit vertics
   bool semaphoreSupport = false;
   bool multisampleDisableSupport = false;
   /**

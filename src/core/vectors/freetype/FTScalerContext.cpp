@@ -48,8 +48,8 @@ static FT_Fixed FloatToFTFixed(float x) {
 }
 
 #ifndef TGFX_FREETYPE_NATIVE 
-std::shared_ptr<ScalerContext> ScalerContext::CreateNative([[maybe_unused]]std::shared_ptr<Typeface> typeface,
-                                                        [[maybe_unused]]float size) {
+std::shared_ptr<ScalerContext> ScalerContext::CreateNative(std::shared_ptr<Typeface>,
+                                                        float) {
   return nullptr;
 }
 #endif
@@ -637,16 +637,16 @@ std::shared_ptr<GlyphSdf> FTScalerContext::generateSdf(GlyphID glyphID, bool fau
     return nullptr;
   }
   auto sdfInfo = std::make_shared<GlyphSdf>();
-  sdfInfo->bitmapBox = Rect::MakeXYWH(glyph->bitmap_left, -glyph->bitmap_top, glyph->bitmap.width, glyph->bitmap.rows);
+  sdfInfo->bitmapBox = Rect::MakeXYWH(glyph->bitmap_left, -glyph->bitmap_top, static_cast<int>(glyph->bitmap.width), static_cast<int>(glyph->bitmap.rows));
   auto err = FT_Render_Glyph(glyph, FT_RENDER_MODE_SDF); 
   if (err != FT_Err_Ok) {
       return nullptr;
   }
-  if (glyph->bitmap.width - sdfInfo->bitmapBox.width() != glyph->bitmap.rows - sdfInfo->bitmapBox.height()) {
+  if (static_cast<float>(glyph->bitmap.width) - sdfInfo->bitmapBox.width() != static_cast<float>(glyph->bitmap.rows) - sdfInfo->bitmapBox.height()) {
     LOGE("generateSdf freetype sdf padding width != height");
     return nullptr;
   } 
-  sdfInfo->sdfPadding = (glyph->bitmap.width - sdfInfo->bitmapBox.width()) * 0.5;
+  sdfInfo->sdfPadding = (static_cast<float>(glyph->bitmap.width) - sdfInfo->bitmapBox.width()) * 0.5f;
   Bitmap bitmap(static_cast<int>(glyph->bitmap.width), static_cast<int>(glyph->bitmap.rows), true);
   if (bitmap.isEmpty()) {
     return nullptr;
@@ -665,7 +665,7 @@ std::shared_ptr<GlyphSdf> FTScalerContext::generateSdf(GlyphID glyphID, bool fau
     src += srcRB;
     dst += dstRB;
   }
-  sdfInfo->buffer = std::move(bitmap.makeBuffer());
+  sdfInfo->buffer = bitmap.makeBuffer();
 
   sdfInfo->path = std::make_shared<Path>();
   generatePath(glyphID, fauxBold, fauxItalic, sdfInfo->path.get());

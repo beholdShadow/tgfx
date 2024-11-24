@@ -16,30 +16,13 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "gpu/processors/CustomEffectProcessor.h"
-
+#pragma once
+#include <vector>
+#include <string>
 namespace tgfx {
-std::unique_ptr<CustomEffectProcessor> CustomEffectProcessor::Make(const std::string& fragShader, const std::vector<ShaderVar>& params) {
-  return std::unique_ptr<CustomEffectProcessor>(new CustomEffectProcessor(fragShader, params));
-}
-
-void CustomEffectProcessor::onComputeProcessorKey(BytesKey*) const {
-}
-
-bool CustomEffectProcessor::onIsEqual(const FragmentProcessor&) const {
-  return false;
-}
-
-void CustomEffectProcessor::emitCode(EmitArgs& args) const {
-  auto* fragBuilder = args.fragBuilder;
-  fragBuilder->addFunction(this->fragShader);
-  // auto colorName = args.uniformHandler->addUniform(ShaderFlags::Fragment, SLType::Float4, "Color");
-  fragBuilder->codeAppendf("%s = customFunction(%s);", args.outputColor.c_str(), args.inputColor.c_str());
-}
-
-void CustomEffectProcessor::onSetData(UniformBuffer*) const {
-  // Color color{1.0, 0.0, 0.0, 1.0};
-  // uniformBuffer->setData("Color", color);
-}
-
+class StringUtil {
+public:
+    static std::vector<std::string> SplitToCharArray(const std::string& text);
+    static std::string getSubstr(const std::string& text, size_t startPos, size_t len);
+};
 }  // namespace tgfx

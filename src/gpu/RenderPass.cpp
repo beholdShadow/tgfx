@@ -82,7 +82,7 @@ void RenderPass::draw(PrimitiveType primitiveType, size_t baseVertex, size_t ver
   size_t maxCount = context->caps()->maxBufferVertices;
   size_t n = vertexCount / maxCount + 1;
   size_t lastCount = vertexCount % maxCount;
-  for (int i = 0; i < n; i++) {
+  for (size_t i = 0; i < n; i++) {
     // LOGE("RenderPass::draw base : %d, count : %d", baseVertex + i * maxCount, i == n - 1 ? lastCount : maxCount); 
     onDraw(primitiveType, baseVertex + i * maxCount, i == n - 1 ? lastCount : maxCount);
   }
@@ -95,7 +95,7 @@ void RenderPass::drawIndexed(PrimitiveType primitiveType, size_t baseIndex, size
   size_t maxCount = context->caps()->maxBufferVertices;
   size_t n = indexCount / maxCount + 1;
   size_t lastCount = indexCount % maxCount;
-  for (int i = 0; i < n; i++) {
+  for (size_t i = 0; i < n; i++) {
     // LOGE("RenderPass::draw base : %d, count : %d", baseVertex + i * maxCount, i == n - 1 ? lastCount : maxCount); 
     onDrawIndexed(primitiveType, baseIndex + i * maxCount, i == n - 1 ? lastCount : maxCount);
   }
