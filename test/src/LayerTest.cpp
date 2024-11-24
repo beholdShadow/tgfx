@@ -441,35 +441,45 @@ TGFX_TEST(LayerTest, shapeLayer) {
   auto device = DevicePool::Make();
   ASSERT_TRUE(device != nullptr);
   auto context = device->lockContext();
-  auto surface = Surface::Make(context, 200, 100);
+  auto surface = Surface::Make(context, 200, 300);
   auto displayList = std::make_unique<DisplayList>();
   auto layer = Layer::Make();
   displayList->root()->addChild(layer);
-  auto shaperLayer = ShapeLayer::Make();
-  auto rect = Rect::MakeXYWH(10, 10, 150, 80);
-  Path path = {};
-  path.addRect(rect);
-  shaperLayer->setPath(path);
-  auto filleStyle = Gradient::MakeLinear({10, 10}, {150, 80});
-  filleStyle->setColors({{0.f, 0.f, 1.f, 1.f}, {0.f, 1.f, 0.f, 1.f}});
-  shaperLayer->setFillStyle(filleStyle);
-  // stroke style
-  shaperLayer->setLineWidth(10.0f);
-  shaperLayer->setLineCap(LineCap::Butt);
-  shaperLayer->setLineJoin(LineJoin::Miter);
-  shaperLayer->setMiterLimit(2.0f);
-  auto strokeStyle = SolidColor::Make(Color::Red());
-  shaperLayer->setStrokeStyle(strokeStyle);
-  std::vector<float> dashPattern = {10.0f, 10.0f};
-  shaperLayer->setLineDashPattern(dashPattern);
-  shaperLayer->setLineDashPhase(0.0f);
-
-  layer->addChild(shaperLayer);
-  auto shapeLayerRect = shaperLayer->getBounds();
-  auto bounds = Rect::MakeXYWH(5, 5, 160, 90);
-
-  EXPECT_EQ(shapeLayerRect, bounds);
-
+  for (int i = 0; i < 3; i++) {
+    auto shaperLayer = ShapeLayer::Make();
+    auto rect = Rect::MakeXYWH(10, 10 + 100 * i, 140, 80);
+    Path path = {};
+    path.addRect(rect);
+    shaperLayer->setPath(path);
+    auto filleStyle = Gradient::MakeLinear({rect.left, rect.top}, {rect.right, rect.bottom});
+    filleStyle->setColors({{0.f, 0.f, 1.f, 1.f}, {0.f, 1.f, 0.f, 1.f}});
+    shaperLayer->setFillStyle(filleStyle);
+    // stroke style
+    shaperLayer->setLineWidth(10.0f);
+    shaperLayer->setLineCap(LineCap::Butt);
+    shaperLayer->setLineJoin(LineJoin::Miter);
+    auto strokeStyle = SolidColor::Make(Color::Red());
+    shaperLayer->setStrokeStyle(strokeStyle);
+    std::vector<float> dashPattern = {10.0f, 10.0f};
+    shaperLayer->setLineDashPattern(dashPattern);
+    shaperLayer->setLineDashPhase(5.0f);
+    shaperLayer->setStrokeAlign(static_cast<StrokeAlign>(i));
+    layer->addChild(shaperLayer);
+    auto shapeLayerRect = shaperLayer->getBounds();
+    switch (i) {
+      case 0:
+        EXPECT_EQ(shapeLayerRect, Rect::MakeLTRB(5, 5, 155, 95));
+        break;
+      case 1:
+        EXPECT_EQ(shapeLayerRect, Rect::MakeLTRB(0, 100, 160, 200));
+        break;
+      case 2:
+        EXPECT_EQ(shapeLayerRect, Rect::MakeLTRB(0, 200, 160, 300));
+        break;
+      default:
+        break;
+    }
+  }
   displayList->render(surface.get());
   context->submit();
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/draw_shape"));
@@ -1720,6 +1730,50 @@ TGFX_TEST(LayerTest, InnerShadowFilter) {
   displayList->render(surface.get());
 
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/innerShadow"));
+  device->unlock();
+}
+
+TGFX_TEST(LayerTest, DirtyFlag) {
+  auto device = DevicePool::Make();
+  auto displayList = std::make_unique<DisplayList>();
+
+  EXPECT_TRUE(device != nullptr);
+  auto context = device->lockContext();
+  auto surface = Surface::Make(context, 100, 100);
+  auto child = ImageLayer::Make();
+  auto image = MakeImage("resources/apitest/imageReplacement.png");
+  EXPECT_TRUE(image != nullptr);
+  child->setImage(image);
+  displayList->root()->addChild(child);
+
+  auto grandChild = ImageLayer::Make();
+  grandChild->setImage(image);
+  grandChild->setMatrix(Matrix::MakeTrans(10, 10));
+  grandChild->setVisible(false);
+  child->addChild(grandChild);
+
+  displayList->render(surface.get());
+
+  auto root = displayList->root();
+  EXPECT_TRUE(!grandChild->bitFields.childrenDirty && grandChild->bitFields.contentDirty);
+  EXPECT_TRUE(!child->bitFields.childrenDirty && !child->bitFields.contentDirty);
+  EXPECT_TRUE(!root->bitFields.childrenDirty && !root->bitFields.contentDirty);
+
+  grandChild->setVisible(true);
+  EXPECT_TRUE(!grandChild->bitFields.childrenDirty && grandChild->bitFields.contentDirty);
+  EXPECT_TRUE(child->bitFields.childrenDirty);
+  EXPECT_TRUE(root->bitFields.childrenDirty);
+  displayList->render(surface.get());
+
+  EXPECT_TRUE(!grandChild->bitFields.childrenDirty && !grandChild->bitFields.contentDirty);
+  EXPECT_TRUE(!child->bitFields.childrenDirty && !child->bitFields.contentDirty);
+  EXPECT_TRUE(!root->bitFields.childrenDirty && !root->bitFields.contentDirty);
+
+  child->setVisible(false);
+  EXPECT_TRUE(!grandChild->bitFields.childrenDirty && !grandChild->bitFields.contentDirty);
+  EXPECT_TRUE(!child->bitFields.childrenDirty && !child->bitFields.contentDirty);
+  EXPECT_TRUE(root->bitFields.childrenDirty && !root->bitFields.contentDirty);
+
   device->unlock();
 }
 }  // namespace tgfx
