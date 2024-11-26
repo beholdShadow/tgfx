@@ -317,11 +317,12 @@ void Canvas::drawSimpleText(const std::string& text, float x, float y, const Fon
 }
 
 void Canvas::drawGlyphs(const GlyphID glyphs[], const Point positions[], size_t glyphCount,
-                        const Font& font, const Paint& paint) {
+                         const Font& font, const Paint& paint, const Path glyphPaths[]) {
   if (glyphCount == 0 || paint.nothingToDraw()) {
     return;
   }
-  GlyphRun glyphRun(font, {glyphs, glyphs + glyphCount}, {positions, positions + glyphCount});
+  GlyphRun glyphRun(font, {glyphs, glyphs + glyphCount}, {positions, positions + glyphCount}, 
+                  glyphPaths != nullptr ? std::vector<Path>(glyphPaths, glyphPaths + glyphCount) : std::vector<Path>(glyphCount, Path()));
   auto glyphRunList = std::make_shared<GlyphRunList>(std::move(glyphRun));
   auto style = CreateFillStyle(paint);
   drawContext->drawGlyphRunList(std::move(glyphRunList), *mcState, style, paint.getStroke());

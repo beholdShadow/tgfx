@@ -82,15 +82,19 @@ bool GlyphRunList::getPath(Path* path, float resolutionScale) const {
     auto& positions = run.positions;
     for (auto& glyphID : run.glyphs) {
       Path glyphPath = {};
-      if (font.getPath(glyphID, &glyphPath)) {
-        auto& position = positions[index];
-        auto glyphMatrix = Matrix::MakeScale(1.0f / resolutionScale, 1.0f / resolutionScale);
-        glyphMatrix.postTranslate(position.x, position.y);
-        glyphPath.transform(glyphMatrix);
-        totalPath.addPath(glyphPath);
+      if (!run.paths[index].isEmpty()) {
+        glyphPath = run.paths[index];
       } else {
+        font.getPath(glyphID, &glyphPath);
+      }
+      if (glyphPath.isEmpty()) {
         return false;
       }
+      auto& position = positions[index];
+      auto glyphMatrix = Matrix::MakeScale(1.0f / resolutionScale, 1.0f / resolutionScale);
+      glyphMatrix.postTranslate(position.x, position.y);
+      glyphPath.transform(glyphMatrix);
+      totalPath.addPath(glyphPath);
       index++;
     }
   }

@@ -58,7 +58,7 @@ class FTScalerContext : public ScalerContext {
 
   void getBBoxForCurrentGlyph(FT_BBox* bbox) const;
 
-  bool loadBitmapGlyph(GlyphID glyphID, FT_Int32 glyphFlags) const;
+  bool loadBitmapGlyph(GlyphID glyphID, FT_Int32 glyphFlags, bool fauxBold = false, bool fauxItalic = false) const;
 
   Matrix getExtraMatrix(bool fauxItalic) const;
 

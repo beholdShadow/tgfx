@@ -194,6 +194,10 @@ void RenderContext::drawGlyphRunList(std::shared_ptr<GlyphRunList> glyphRunList,
     drawColorGlyphs(std::move(glyphRunList), state, style);
     return;
   }
+  if (glyphRunList->hasPath()) {
+    drawShapeGlyphs(std::move(glyphRunList), state, style, stroke);
+    return;
+  }
   auto maxScale = state.matrix.getMaxScale();
   if (maxScale <= 0.0f) {
     return;
@@ -280,6 +284,20 @@ void RenderContext::drawColorGlyphs(std::shared_ptr<GlyphRunList> glyphRunList,
       drawImageRect(std::move(glyphImage), rect, {}, glyphState, style);
     }
   }
+}
+
+void RenderContext::drawShapeGlyphs(std::shared_ptr<GlyphRunList> glyphRunList,
+                                    const MCState& state, const FillStyle& style,
+                                    const Stroke* stroke) {
+  Path path = {};
+  if (!glyphRunList->getPath(&path, 1.0)) {
+    return;
+  }
+  if (stroke) {
+    stroke->applyToPath(&path);
+  }
+  auto shape = Shape::MakeFrom(path);
+  drawShape(shape, state, style);
 }
 
 /**

@@ -26,7 +26,7 @@ namespace tgfx {
 /**
  * 16 bit unsigned integer to hold a glyph index.
  */
-typedef uint16_t GlyphID;
+typedef uint32_t GlyphID;
 
 /**
  * 32-bit signed integer to hold a UTF-32 code unit.

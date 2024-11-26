@@ -31,4 +31,13 @@ std::vector<std::string> StringUtil::SplitToCharArray(const std::string& text) {
     }
     return result;
 }
+
+bool StringUtil::IsEmoji(const std::string& text) {
+    auto scalerContextClass = emscripten::val::module_property("ScalerContext");
+    if (!scalerContextClass.as<bool>()) {
+        return false;
+    }
+    return scalerContextClass.call<bool>("isEmoji", text);
+}   
+
 }  // namespace tgfx

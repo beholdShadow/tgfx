@@ -18,7 +18,7 @@
 
 #include "tgfx/platform/StringUtil.h"
 namespace tgfx {
-std::string StringUtil::getSubstr(const std::string& text, size_t startPos, size_t len) {
+std::string StringUtil::Substr(const std::string& text, size_t startPos, size_t len) {
     std::string res;
     auto charArray = StringUtil::SplitToCharArray(text);
     int _len = static_cast<int>(len);

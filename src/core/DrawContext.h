@@ -82,12 +82,12 @@ class DrawContext {
    */
   virtual void drawGlyphRunList(std::shared_ptr<GlyphRunList> glyphRunList, const MCState& state,
                                 const FillStyle& style, const Stroke* stroke) = 0;
-
+                                
   /**
    * Draws a Picture with the specified MCState.
    */
   virtual void drawPicture(std::shared_ptr<Picture> picture, const MCState& state) = 0;
-
+  
   /**
    * Draws a Picture into an offscreen layer. This offscreen layer is then passed to the image
    * filter (if not nullptr), which generates a new image. This new image is finally drawn using the

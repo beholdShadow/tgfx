@@ -21,9 +21,9 @@
 #include "tgfx/core/Path.h"
 namespace tgfx {
 struct GlyphSdf {
-    Rect bitmapBox;
-    float sdfPadding;
-    std::shared_ptr<ImageBuffer> buffer;
-    std::shared_ptr<Path> path;
+    // Rect bitmapBox = Rect::MakeEmpty();
+    float sdfPadding = 0.0f;
+    std::shared_ptr<ImageBuffer> buffer = nullptr;
+    Path path = {};
 };
 }  // namespace tgfx

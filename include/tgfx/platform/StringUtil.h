@@ -23,6 +23,7 @@ namespace tgfx {
 class StringUtil {
 public:
     static std::vector<std::string> SplitToCharArray(const std::string& text);
-    static std::string getSubstr(const std::string& text, size_t startPos, size_t len);
+    static std::string Substr(const std::string& text, size_t startPos, size_t len);
+    static bool IsEmoji(const std::string& text);
 };
 }  // namespace tgfx

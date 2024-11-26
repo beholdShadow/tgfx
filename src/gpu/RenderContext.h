@@ -77,6 +77,9 @@ class RenderContext : public DrawContext {
   bool drawAsClear(const Rect& rect, const MCState& state, const FillStyle& style);
   void drawColorGlyphs(std::shared_ptr<GlyphRunList> glyphRunList, const MCState& state,
                        const FillStyle& style);
+  void drawShapeGlyphs(std::shared_ptr<GlyphRunList> glyphRunList,
+                                     const MCState& state, const FillStyle& style,
+                                     const Stroke* stroke);
   void addDrawOp(std::unique_ptr<DrawOp> op, const Rect& localBounds, const MCState& state,
                  const FillStyle& style);
   void addOp(std::unique_ptr<Op> op, const std::function<bool()>& willDiscardContent);

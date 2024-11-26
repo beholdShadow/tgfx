@@ -65,22 +65,17 @@ std::shared_ptr<ScalerContext> ScalerContext::CreateNew(std::shared_ptr<Typeface
 }
 
 static void ApplyEmbolden(FT_Face face, FT_GlyphSlot glyph, GlyphID glyphId, FT_Int32 glyphFlags) {
-  switch (glyph->format) {
-    case FT_GLYPH_FORMAT_OUTLINE:
+  if ((glyphFlags & FT_LOAD_NO_BITMAP) > 0) {
       FT_Pos strength;
       strength =
           FT_MulFix(face->units_per_EM, face->size->metrics.y_scale) / OUTLINE_EMBOLDEN_DIVISOR;
-      FT_Outline_Embolden(&glyph->outline, strength);
-      break;
-    case FT_GLYPH_FORMAT_BITMAP:
+      FT_Outline_EmboldenXY(&glyph->outline, strength, 0l);
+  } else {
       if (!face->glyph->bitmap.buffer) {
         FT_Load_Glyph(face, glyphId, glyphFlags);
       }
       FT_GlyphSlot_Own_Bitmap(glyph);
       FT_Bitmap_Embolden(glyph->library, &glyph->bitmap, BITMAP_EMBOLDEN_STRENGTH, 0);
-      break;
-    default:
-      LOGE("unknown glyph format");
   }
 }
 
@@ -611,14 +606,17 @@ std::shared_ptr<ImageBuffer> FTScalerContext::generateImage(GlyphID glyphID,
   return bitmap.makeBuffer();
 }
 
-bool FTScalerContext::loadBitmapGlyph(GlyphID glyphID, FT_Int32 glyphFlags) const {
-  if (setupSize(false)) {
+bool FTScalerContext::loadBitmapGlyph(GlyphID glyphID, FT_Int32 glyphFlags, bool fauxBold, bool fauxItalic) const {
+  if (setupSize(fauxItalic)) {
     return false;
   }
   auto face = ftTypeface()->face;
   auto err = FT_Load_Glyph(face, glyphID, glyphFlags);
   if (err != FT_Err_Ok) {
     return false;
+  }
+  if (fauxBold) {
+    ApplyEmbolden(face, face->glyph, glyphID, glyphFlags);
   }
   auto ftBitmap = face->glyph->bitmap;
   return ftBitmap.pixel_mode == FT_PIXEL_MODE_BGRA || ftBitmap.pixel_mode == FT_PIXEL_MODE_GRAY;
@@ -629,7 +627,7 @@ std::shared_ptr<GlyphSdf> FTScalerContext::generateSdf(GlyphID glyphID, bool fau
   auto glyphFlags = loadGlyphFlags;
   glyphFlags |= FT_LOAD_RENDER;
   glyphFlags &= ~FT_LOAD_NO_BITMAP;
-  if (!loadBitmapGlyph(glyphID, glyphFlags)) {
+  if (!loadBitmapGlyph(glyphID, glyphFlags, fauxBold, fauxItalic)) {
     return nullptr;
   }
   auto glyph = ftTypeface()->face->glyph;
@@ -637,16 +635,16 @@ std::shared_ptr<GlyphSdf> FTScalerContext::generateSdf(GlyphID glyphID, bool fau
     return nullptr;
   }
   auto sdfInfo = std::make_shared<GlyphSdf>();
-  sdfInfo->bitmapBox = Rect::MakeXYWH(glyph->bitmap_left, -glyph->bitmap_top, static_cast<int>(glyph->bitmap.width), static_cast<int>(glyph->bitmap.rows));
+  auto bitmapBox = Rect::MakeXYWH(glyph->bitmap_left, -glyph->bitmap_top, static_cast<int>(glyph->bitmap.width), static_cast<int>(glyph->bitmap.rows));
   auto err = FT_Render_Glyph(glyph, FT_RENDER_MODE_SDF); 
   if (err != FT_Err_Ok) {
       return nullptr;
   }
-  if (static_cast<float>(glyph->bitmap.width) - sdfInfo->bitmapBox.width() != static_cast<float>(glyph->bitmap.rows) - sdfInfo->bitmapBox.height()) {
+  if (static_cast<float>(glyph->bitmap.width) - bitmapBox.width() != static_cast<float>(glyph->bitmap.rows) - bitmapBox.height()) {
     LOGE("generateSdf freetype sdf padding width != height");
     return nullptr;
   } 
-  sdfInfo->sdfPadding = (static_cast<float>(glyph->bitmap.width) - sdfInfo->bitmapBox.width()) * 0.5f;
+  sdfInfo->sdfPadding = (static_cast<float>(glyph->bitmap.width) - bitmapBox.width()) * 0.5f;
   Bitmap bitmap(static_cast<int>(glyph->bitmap.width), static_cast<int>(glyph->bitmap.rows), true);
   if (bitmap.isEmpty()) {
     return nullptr;
@@ -666,9 +664,8 @@ std::shared_ptr<GlyphSdf> FTScalerContext::generateSdf(GlyphID glyphID, bool fau
     dst += dstRB;
   }
   sdfInfo->buffer = bitmap.makeBuffer();
-
-  sdfInfo->path = std::make_shared<Path>();
-  generatePath(glyphID, fauxBold, fauxItalic, sdfInfo->path.get());
+  
+  generatePath(glyphID, fauxBold, fauxItalic, &sdfInfo->path);
   
   return sdfInfo;
 }

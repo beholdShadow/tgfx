@@ -55,6 +55,13 @@ class GlyphRunList {
   }
 
   /**
+   * Returns true if the GlyphRunList has color.
+   */
+  bool hasPath() const {
+    return !_glyphRuns[0].paths[0].isEmpty();
+  }
+
+  /**
    * Returns true if the GlyphRunList has outlines.
    */
   bool hasOutlines() const {

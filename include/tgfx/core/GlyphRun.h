@@ -34,9 +34,14 @@ struct GlyphRun {
    * Constructs a GlyphRun using a font, a list of glyph IDs, and their positions.
    */
   GlyphRun(Font font, std::vector<GlyphID> glyphIDs, std::vector<Point> positions)
-      : font(font), glyphs(glyphIDs), positions(positions) {
+      : font(font), glyphs(glyphIDs), positions(positions), paths(positions.size(), Path()) {
   }
-
+  /**
+   * Constructs a GlyphRun using a font, a list of glyph IDs, and their positions.
+   */
+  GlyphRun(Font font, std::vector<GlyphID> glyphIDs, std::vector<Point> positions, std::vector<Path> paths)
+      : font(font), glyphs(glyphIDs), positions(positions), paths(std::move(paths)) {
+  }
   /**
    * Returns the font used to render the glyphs in this run.
    */
@@ -51,5 +56,10 @@ struct GlyphRun {
    * Returns the sequence of positions for each glyph in this run.
    */
   std::vector<Point> positions = {};
+
+  /**
+   * Returns the sequence of sdfdata for each glyph in this run.
+   */
+  std::vector<Path> paths = {};
 };
 }  // namespace tgfx

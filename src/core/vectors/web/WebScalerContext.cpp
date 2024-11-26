@@ -98,6 +98,12 @@ std::shared_ptr<ImageBuffer> WebScalerContext::generateImage(GlyphID glyphID, bo
   return WebImageBuffer::MakeAdopted(std::move(buffer));
 }
 
+std::shared_ptr<GlyphSdf> WebScalerContext::generateSdf(GlyphID glyphID, bool, bool) const {
+  auto sdfInfo = std::make_shared<GlyphSdf>();
+  sdfInfo->buffer = generateImage(glyphID, true);
+  return sdfInfo;
+}
+
 std::string WebScalerContext::getText(GlyphID glyphID) const {
   return static_cast<WebTypeface*>(typeface.get())->getText(glyphID);
 }
