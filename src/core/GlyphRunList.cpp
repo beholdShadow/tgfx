@@ -82,7 +82,7 @@ bool GlyphRunList::getPath(Path* path, float resolutionScale) const {
     auto& positions = run.positions;
     for (auto& glyphID : run.glyphs) {
       Path glyphPath = {};
-      if (!run.paths[index].isEmpty()) {
+      if (!run.paths.empty() && !run.paths[index].isEmpty()) {
         glyphPath = run.paths[index];
       } else {
         font.getPath(glyphID, &glyphPath);

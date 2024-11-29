@@ -431,7 +431,7 @@ bool FTScalerContext::generatePath(GlyphID glyphID, bool fauxBold, bool fauxItal
   auto flags = loadGlyphFlags;
   flags |= FT_LOAD_NO_BITMAP;  // ignore embedded bitmaps so we're sure to get the outline
   flags &= ~FT_LOAD_RENDER;    // don't scan convert (we just want the outline)
-
+  flags |= FT_LOAD_NO_HINTING;
   auto err = FT_Load_Glyph(face, glyphID, flags);
   if (err != FT_Err_Ok || face->glyph->format != FT_GLYPH_FORMAT_OUTLINE) {
     path->reset();
@@ -624,48 +624,47 @@ bool FTScalerContext::loadBitmapGlyph(GlyphID glyphID, FT_Int32 glyphFlags, bool
 
 std::shared_ptr<GlyphSdf> FTScalerContext::generateSdf(GlyphID glyphID, bool fauxBold, bool fauxItalic) const {
   std::lock_guard<std::mutex> autoLock(ftTypeface()->locker);
-  auto glyphFlags = loadGlyphFlags;
-  glyphFlags |= FT_LOAD_RENDER;
-  glyphFlags &= ~FT_LOAD_NO_BITMAP;
-  if (!loadBitmapGlyph(glyphID, glyphFlags, fauxBold, fauxItalic)) {
-    return nullptr;
-  }
-  auto glyph = ftTypeface()->face->glyph;
-  if (glyph->bitmap.pixel_mode == FT_PIXEL_MODE_BGRA) {
-    return nullptr;
-  }
   auto sdfInfo = std::make_shared<GlyphSdf>();
-  auto bitmapBox = Rect::MakeXYWH(glyph->bitmap_left, -glyph->bitmap_top, static_cast<int>(glyph->bitmap.width), static_cast<int>(glyph->bitmap.rows));
-  auto err = FT_Render_Glyph(glyph, FT_RENDER_MODE_SDF); 
-  if (err != FT_Err_Ok) {
-      return nullptr;
-  }
-  if (static_cast<float>(glyph->bitmap.width) - bitmapBox.width() != static_cast<float>(glyph->bitmap.rows) - bitmapBox.height()) {
-    LOGE("generateSdf freetype sdf padding width != height");
-    return nullptr;
-  } 
-  sdfInfo->sdfPadding = (static_cast<float>(glyph->bitmap.width) - bitmapBox.width()) * 0.5f;
-  Bitmap bitmap(static_cast<int>(glyph->bitmap.width), static_cast<int>(glyph->bitmap.rows), true);
-  if (bitmap.isEmpty()) {
-    return nullptr;
-  }
-  auto width = glyph->bitmap.width;
-  auto height = glyph->bitmap.rows;
-  auto src = reinterpret_cast<const uint8_t*>(glyph->bitmap.buffer);
-  auto srcRB = glyph->bitmap.pitch;
-  Pixmap bm(bitmap);
-  auto dst = static_cast<uint8_t*>(bm.writablePixels());
-  auto dstRB = bm.rowBytes();
-  auto dstFormat = ToPixelFormat(bm.colorType());
-  for (size_t i = 0; i < height; i++) {
-    gfx::skcms_Transform(src, gfx::skcms_PixelFormat_A_8, gfx::skcms_AlphaFormat_PremulAsEncoded, nullptr, dst,
-                         dstFormat, gfx::skcms_AlphaFormat_PremulAsEncoded, nullptr, width);
-    src += srcRB;
-    dst += dstRB;
-  }
-  sdfInfo->buffer = bitmap.makeBuffer();
-  
   generatePath(glyphID, fauxBold, fauxItalic, &sdfInfo->path);
+  // auto glyphFlags = loadGlyphFlags;
+  // glyphFlags |= FT_LOAD_RENDER;
+  // glyphFlags &= ~FT_LOAD_NO_BITMAP;
+  // if (!loadBitmapGlyph(glyphID, glyphFlags, fauxBold, fauxItalic)) {
+  //   return nullptr;
+  // }
+  // auto glyph = ftTypeface()->face->glyph;
+  // if (glyph->bitmap.pixel_mode == FT_PIXEL_MODE_BGRA) {
+  //   return nullptr;
+  // }
+  // auto bitmapBox = Rect::MakeXYWH(glyph->bitmap_left, -glyph->bitmap_top, static_cast<int>(glyph->bitmap.width), static_cast<int>(glyph->bitmap.rows));
+  // auto err = FT_Render_Glyph(glyph, FT_RENDER_MODE_SDF); 
+  // if (err != FT_Err_Ok) {
+  //     return nullptr;
+  // }
+  // if (static_cast<float>(glyph->bitmap.width) - bitmapBox.width() != static_cast<float>(glyph->bitmap.rows) - bitmapBox.height()) {
+  //   LOGE("generateSdf freetype sdf padding width != height");
+  //   return nullptr;
+  // } 
+  // sdfInfo->sdfPadding = (static_cast<float>(glyph->bitmap.width) - bitmapBox.width()) * 0.5f;
+  // Bitmap bitmap(static_cast<int>(glyph->bitmap.width), static_cast<int>(glyph->bitmap.rows), true);
+  // if (bitmap.isEmpty()) {
+  //   return nullptr;
+  // }
+  // auto width = glyph->bitmap.width;
+  // auto height = glyph->bitmap.rows;
+  // auto src = reinterpret_cast<const uint8_t*>(glyph->bitmap.buffer);
+  // auto srcRB = glyph->bitmap.pitch;
+  // Pixmap bm(bitmap);
+  // auto dst = static_cast<uint8_t*>(bm.writablePixels());
+  // auto dstRB = bm.rowBytes();
+  // auto dstFormat = ToPixelFormat(bm.colorType());
+  // for (size_t i = 0; i < height; i++) {
+  //   gfx::skcms_Transform(src, gfx::skcms_PixelFormat_A_8, gfx::skcms_AlphaFormat_PremulAsEncoded, nullptr, dst,
+  //                        dstFormat, gfx::skcms_AlphaFormat_PremulAsEncoded, nullptr, width);
+  //   src += srcRB;
+  //   dst += dstRB;
+  // }
+  // sdfInfo->buffer = bitmap.makeBuffer();
   
   return sdfInfo;
 }

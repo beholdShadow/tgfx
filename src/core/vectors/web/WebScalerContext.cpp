@@ -98,9 +98,8 @@ std::shared_ptr<ImageBuffer> WebScalerContext::generateImage(GlyphID glyphID, bo
   return WebImageBuffer::MakeAdopted(std::move(buffer));
 }
 
-std::shared_ptr<GlyphSdf> WebScalerContext::generateSdf(GlyphID glyphID, bool, bool) const {
+std::shared_ptr<GlyphSdf> WebScalerContext::generateSdf(GlyphID, bool, bool) const {
   auto sdfInfo = std::make_shared<GlyphSdf>();
-  sdfInfo->buffer = generateImage(glyphID, true);
   return sdfInfo;
 }
 
