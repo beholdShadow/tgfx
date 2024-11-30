@@ -81,7 +81,7 @@ void GLTextureEffect::emitCode(EmitArgs& args) const {
     fragBuilder->codeAppendf("%s = %s.a * %s;", args.outputColor.c_str(), args.outputColor.c_str(),
                              args.inputColor.c_str());
   } else {
-    fragBuilder->codeAppendf("%s = %s * %s.a;", args.outputColor.c_str(), args.outputColor.c_str(),
+    fragBuilder->codeAppendf("%s = %s * %s;", args.outputColor.c_str(), args.outputColor.c_str(),
                              args.inputColor.c_str());
   }
 }

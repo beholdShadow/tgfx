@@ -43,6 +43,7 @@ struct Uniform {
     Int2,
     Int3,
     Int4,
+    Byte4
   };
 
   std::string name;

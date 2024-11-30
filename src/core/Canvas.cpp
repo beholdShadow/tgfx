@@ -395,11 +395,7 @@ void Canvas::drawAtlas(std::shared_ptr<Image> atlas, const Matrix matrix[], cons
     if (colors) {
       glyphStyle.color = colors[i].premultiply();
     }
-    if (rect == atlasRect) {
-      drawContext->drawImage(atlas, sampling, state, glyphStyle);
-    } else {
-      drawContext->drawImageRect(atlas, rect, sampling, state, glyphStyle);
-    }
+    drawContext->drawImageRect(atlas, rect, sampling, state, glyphStyle);
   }
 }
 }  // namespace tgfx

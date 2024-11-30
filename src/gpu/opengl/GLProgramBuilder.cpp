@@ -50,6 +50,7 @@ static constexpr std::pair<SLType, const char*> SLTypes[] = {
     {SLType::Int2, "ivec2"},
     {SLType::Int3, "ivec3"},
     {SLType::Int4, "ivec4"},
+    {SLType::Byte4, "vec4"},
     {SLType::Texture2DRectSampler, "sampler2DRect"},
     {SLType::TextureExternalSampler, "samplerExternalOES"},
     {SLType::Texture2DSampler, "sampler2D"},
@@ -110,7 +111,7 @@ std::unique_ptr<GLProgram> GLProgramBuilder::finalize() {
 
   auto vertex = vertexShaderBuilder()->shaderString();
   auto fragment = fragmentShaderBuilder()->shaderString();
-  // LOGI("GLProgramBuilder vertex:%s\nGLProgramBuilder fragment:%s", vertex.c_str(), fragment.c_str());
+  LOGI("GLProgramBuilder vertex:\n%s\nGLProgramBuilder fragment:\n%s", vertex.c_str(), fragment.c_str());
   auto programID = CreateGLProgram(context, vertex, fragment);
   if (programID == 0) {
     return nullptr;

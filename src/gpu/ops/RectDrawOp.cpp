@@ -78,10 +78,11 @@ class RectCoverageVerticesProvider : public DataProvider {
           vertices[index++] = normalQuad.point(k).y;
           if (hasColor) {
             auto& color = rectPaint->color;
-            vertices[index++] = color.red;
-            vertices[index++] = color.green;
-            vertices[index++] = color.blue;
-            vertices[index++] = color.alpha;
+            auto byteVertics = reinterpret_cast<uint8_t*>(&vertices[index++]);
+            byteVertics[0] = static_cast<uint8_t>(color.red * 255.0);
+            byteVertics[1] = static_cast<uint8_t>(color.green * 255.0);
+            byteVertics[2] = static_cast<uint8_t>(color.blue * 255.0);
+            byteVertics[3] = static_cast<uint8_t>(color.alpha * 255.0);
           }
         }
       }
@@ -118,10 +119,11 @@ class RectNonCoverageVerticesProvider : public DataProvider {
         vertices[index++] = localQuad.point(j - 1).y;
         if (hasColor) {
           auto& color = rectPaint->color;
-          vertices[index++] = color.red;
-          vertices[index++] = color.green;
-          vertices[index++] = color.blue;
-          vertices[index++] = color.alpha;
+          auto byteVertics = reinterpret_cast<uint8_t*>(&vertices[index++]);
+          byteVertics[0] = static_cast<uint8_t>(color.red * 255.0);
+          byteVertics[1] = static_cast<uint8_t>(color.green * 255.0);
+          byteVertics[2] = static_cast<uint8_t>(color.blue * 255.0);
+          byteVertics[3] = static_cast<uint8_t>(color.alpha * 255.0);
         }
       }
     }
@@ -160,6 +162,7 @@ bool RectDrawOp::onCombineIfPossible(Op* op) {
     return false;
   }
   rectPaints.insert(rectPaints.end(), that->rectPaints.begin(), that->rectPaints.end());
+  // LOGE("rect draw onCombine trigger!!!!! rect size =%d", rectPaints.size());
   return true;
 }
 
