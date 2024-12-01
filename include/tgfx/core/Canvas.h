@@ -277,7 +277,17 @@ class Canvas {
     * @param paint blend, color, and so on, used to draw.
     */
   void drawGlyphs(const GlyphID glyphs[], const Point positions[], size_t glyphCount,
-                  const Font& font, const Paint& paint, const Path glyphPaths[] = nullptr);
+                  const Font& font, const Paint& paint);
+
+  /**
+  * Draws an array of glyphs from glyphIDs at positions using clip, matrix, path, and paint.
+  * @param glyphs the array of glyphIDs to draw.
+  * @param positions where to draw each glyph.
+  * @param glyphPaths glyphs outline paths.
+  * @param glyphCount number of glyphs to draw.
+  * @param paint blend, color, and so on, used to draw.
+  */
+  void drawGlyphs(const GlyphID glyphs[], const Point positions[], const Path glyphPaths[], size_t glyphCount, const Paint& paint);
 
   /**
    * Draws a TextBlob at (x, y) using clip, matrix, and paint.

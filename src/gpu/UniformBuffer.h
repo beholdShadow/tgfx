@@ -42,8 +42,7 @@ struct Uniform {
     Int,
     Int2,
     Int3,
-    Int4,
-    Byte4
+    Int4
   };
 
   std::string name;

@@ -317,12 +317,22 @@ void Canvas::drawSimpleText(const std::string& text, float x, float y, const Fon
 }
 
 void Canvas::drawGlyphs(const GlyphID glyphs[], const Point positions[], size_t glyphCount,
-                         const Font& font, const Paint& paint, const Path glyphPaths[]) {
+                         const Font& font, const Paint& paint) {
   if (glyphCount == 0 || paint.nothingToDraw()) {
     return;
   }
-  GlyphRun glyphRun(font, {glyphs, glyphs + glyphCount}, {positions, positions + glyphCount}, 
-                  glyphPaths != nullptr ? std::vector<Path>(glyphPaths, glyphPaths + glyphCount) : std::vector<Path>(glyphCount, Path()));
+  GlyphRun glyphRun(font, {glyphs, glyphs + glyphCount}, {positions, positions + glyphCount});
+  auto glyphRunList = std::make_shared<GlyphRunList>(std::move(glyphRun));
+  auto style = CreateFillStyle(paint);
+  drawContext->drawGlyphRunList(std::move(glyphRunList), *mcState, style, paint.getStroke());
+}
+
+void Canvas::drawGlyphs(const GlyphID glyphs[], const Point positions[], const Path glyphPaths[], size_t glyphCount, const Paint& paint) {
+  if (glyphCount == 0 || paint.nothingToDraw()) {
+    return;
+  }
+  GlyphRun glyphRun({glyphs, glyphs + glyphCount}, {positions, positions + glyphCount}, 
+                  std::vector<Path>(glyphPaths, glyphPaths + glyphCount));
   auto glyphRunList = std::make_shared<GlyphRunList>(std::move(glyphRun));
   auto style = CreateFillStyle(paint);
   drawContext->drawGlyphRunList(std::move(glyphRunList), *mcState, style, paint.getStroke());

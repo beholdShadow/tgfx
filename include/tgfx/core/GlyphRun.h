@@ -34,13 +34,13 @@ struct GlyphRun {
    * Constructs a GlyphRun using a font, a list of glyph IDs, and their positions.
    */
   GlyphRun(Font font, std::vector<GlyphID> glyphIDs, std::vector<Point> positions)
-      : font(font), glyphs(glyphIDs), positions(positions), paths(positions.size(), Path()) {
+      : font(font), glyphs(glyphIDs), positions(positions) {
   }
   /**
    * Constructs a GlyphRun using a font, a list of glyph IDs, and their positions.
    */
-  GlyphRun(Font font, std::vector<GlyphID> glyphIDs, std::vector<Point> positions, std::vector<Path> paths)
-      : font(font), glyphs(glyphIDs), positions(positions), paths(std::move(paths)) {
+  GlyphRun(std::vector<GlyphID> glyphIDs, std::vector<Point> positions, std::vector<Path> paths)
+      : glyphs(glyphIDs), positions(positions), paths(std::move(paths)) {
   }
   /**
    * Returns the font used to render the glyphs in this run.
