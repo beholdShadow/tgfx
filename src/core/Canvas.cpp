@@ -327,17 +327,6 @@ void Canvas::drawGlyphs(const GlyphID glyphs[], const Point positions[], size_t 
   drawContext->drawGlyphRunList(std::move(glyphRunList), *mcState, style, paint.getStroke());
 }
 
-void Canvas::drawGlyphs(const GlyphID glyphs[], const Point positions[], const Path glyphPaths[], size_t glyphCount, const Paint& paint) {
-  if (glyphCount == 0 || paint.nothingToDraw()) {
-    return;
-  }
-  GlyphRun glyphRun({glyphs, glyphs + glyphCount}, {positions, positions + glyphCount}, 
-                  std::vector<Path>(glyphPaths, glyphPaths + glyphCount));
-  auto glyphRunList = std::make_shared<GlyphRunList>(std::move(glyphRun));
-  auto style = CreateFillStyle(paint);
-  drawContext->drawGlyphRunList(std::move(glyphRunList), *mcState, style, paint.getStroke());
-}
-
 void Canvas::drawTextBlob(std::shared_ptr<TextBlob> textBlob, float x, float y,
                           const Paint& paint) {
   if (textBlob == nullptr || paint.nothingToDraw()) {

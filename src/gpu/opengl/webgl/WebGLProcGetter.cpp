@@ -141,6 +141,7 @@ void* WebGLProcGetter::getProcAddress(const char* name) const {
   N(glDeleteSync)
   N(glBlitFramebuffer)
   N(glRenderbufferStorageMultisample)
+  N(glGenerateMipmap)
 #undef N
 
   // We explicitly do not use GetProcAddress or something similar because its code size is quite

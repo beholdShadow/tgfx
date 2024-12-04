@@ -21,7 +21,7 @@
 namespace tgfx {
 GLVertexShaderBuilder::GLVertexShaderBuilder(ProgramBuilder* program)
     : VertexShaderBuilder(program) {
-  setPrecisionQualifier("precision mediump float;");
+  setPrecisionQualifier("precision highp float;");
 }
 
 void GLVertexShaderBuilder::emitNormalizedPosition(const std::string& devPos) {

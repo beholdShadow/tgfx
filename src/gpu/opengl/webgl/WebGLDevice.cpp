@@ -44,13 +44,20 @@ std::shared_ptr<WebGLDevice> WebGLDevice::MakeFrom(const std::string& canvasID) 
 
   EmscriptenWebGLContextAttributes attrs;
   emscripten_webgl_init_context_attributes(&attrs);
-  attrs.depth = EM_FALSE;
-  attrs.stencil = EM_FALSE;
+  attrs.alpha = EM_TRUE;
+  attrs.depth = EM_TRUE;
+  attrs.stencil = EM_TRUE;
   attrs.antialias = EM_FALSE;
+  attrs.majorVersion = 2;
   auto context = emscripten_webgl_create_context(canvasID.c_str(), &attrs);
   if (context == 0) {
-    LOGE("WebGLDevice::MakeFrom emscripten_webgl_create_context error");
-    return nullptr;
+    LOGE("WebGLDevice::MakeFrom emscripten_webgl_create_context webgl 2.0 error");
+    attrs.majorVersion = 1;
+    context = emscripten_webgl_create_context(canvasID.c_str(), &attrs);
+    if (context == 0) {
+      LOGE("WebGLDevice::MakeFrom emscripten_webgl_create_context webgl 1.0 error");
+      return nullptr;
+    }
   }
   auto result = emscripten_webgl_make_context_current(context);
   if (result != EMSCRIPTEN_RESULT_SUCCESS) {

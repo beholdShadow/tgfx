@@ -25,7 +25,7 @@ static constexpr char kDstColorName[] = "_dstColor";
 
 GLFragmentShaderBuilder::GLFragmentShaderBuilder(ProgramBuilder* program)
     : FragmentShaderBuilder(program) {
-  setPrecisionQualifier("precision mediump float;");
+  setPrecisionQualifier("precision highp float;");
 }
 
 std::string GLFragmentShaderBuilder::dstColor() {

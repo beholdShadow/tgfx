@@ -150,6 +150,7 @@ void ShapeDrawOp::execute(RenderPass* renderPass) {
   auto vertexDataSize = vertexBuffer ? vertexBuffer->size() : vertexData->size();
   auto vertexCount = aa == AAType::Coverage ? PathTriangulator::GetAATriangleCount(vertexDataSize)
                                             : PathTriangulator::GetTriangleCount(vertexDataSize);
+  LOGE("ShapeDrawOp::execute vertexCount = %d", vertexCount);
   if (vertexBuffer != nullptr) {
     renderPass->bindBuffers(nullptr, vertexBuffer);
     renderPass->draw(PrimitiveType::Triangles, 0, vertexCount);

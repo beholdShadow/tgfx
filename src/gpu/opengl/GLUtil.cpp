@@ -134,12 +134,6 @@ unsigned LoadGLShader(Context* context, unsigned shaderType, const std::string& 
 }
 
 bool CheckGLErrorImpl(Context* context, std::string file, int line) {
-#ifdef TGFX_BUILD_FOR_WEB
-  USE(context);
-  USE(file);
-  USE(line);
-  return true;
-#else
   auto gl = GLFunctions::Get(context);
   bool success = true;
   unsigned errorCode;
@@ -152,6 +146,5 @@ bool CheckGLErrorImpl(Context* context, std::string file, int line) {
     }
   }
   return success;
-#endif
 }
 }  // namespace tgfx

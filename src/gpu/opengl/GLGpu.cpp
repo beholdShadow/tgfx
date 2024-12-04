@@ -64,6 +64,7 @@ std::unique_ptr<TextureSampler> GLGpu::createSampler(int width, int height, Pixe
     gl->texImage2D(sampler->target, level, static_cast<int>(textureFormat.internalFormatTexImage),
                    currentWidth, currentHeight, 0, textureFormat.externalFormat, GL_UNSIGNED_BYTE,
                    nullptr);
+    // LOGI("texImage2D internalFormatTexImage = %#x, externalFormat = %#x, width = %d, height = %d", textureFormat.internalFormatTexImage, textureFormat.externalFormat, currentWidth, currentHeight);
     success = CheckGLError(context);
   }
   if (!success) {

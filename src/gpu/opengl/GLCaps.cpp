@@ -85,6 +85,7 @@ GLInfo::GLInfo(GLGetString* getString, GLGetStringi* getStringi, GLGetIntegerv* 
       getInternalformativ(getInternalformativ), getShaderPrecisionFormat(getShaderPrecisionFormat) {
   auto versionString = (const char*)getString(GL_VERSION);
   auto glVersion = GetGLVersion(versionString);
+  LOGI("GL Version:%s", versionString);
   version = GL_VER(glVersion.majorVersion, glVersion.minorVersion);
   standard = GetGLStandard(versionString);
   fetchExtensions();
@@ -299,7 +300,7 @@ void GLCaps::initWebGLSupport(const GLInfo& info) {
   vertexArrayObjectSupport = version >= GL_VER(2, 0) ||
                              info.hasExtension("GL_OES_vertex_array_object") ||
                              info.hasExtension("OES_vertex_array_object");
-  textureRedSupport = false;
+  textureRedSupport = version >= GL_VER(2, 0) || info.hasExtension("GL_EXT_texture_rg");
   multisampleDisableSupport = false;  // no WebGL support
   textureBarrierSupport = false;
   semaphoreSupport = version >= GL_VER(2, 0);
@@ -342,7 +343,7 @@ void GLCaps::initFormatMap(const GLInfo& info) {
   }
   // ES 2.0 requires that the internal/external formats match.
   bool useSizedTexFormats =
-      (standard == GLStandard::GL || (standard == GLStandard::GLES && version >= GL_VER(3, 0)));
+      (standard == GLStandard::GL || (standard == GLStandard::GLES && version >= GL_VER(3, 0)) || (standard == GLStandard::WebGL && version >= GL_VER(2, 0)));
   bool useSizedRbFormats = standard == GLStandard::GLES || standard == GLStandard::WebGL;
 
   for (auto& item : pixelFormatMap) {
