@@ -25,25 +25,5 @@ struct GlyphSdf {
     float sdfPadding = 0.0f;
     std::shared_ptr<ImageBuffer> buffer = nullptr;
     Path path = {};
-    GlyphSdf() = default;
-    // 拷贝构造函数
-    GlyphSdf(const GlyphSdf& other) {
-        this->sdfPadding = other.sdfPadding;
-        this->buffer = other.buffer;
-        this->path = {};
-        this->path.addPath(other.path);
-    }
-    // 赋值运算符
-    GlyphSdf& operator=(const GlyphSdf& other) {
-        if (this == &other) { // 防止自我赋值
-            return *this;
-        }
-        this->sdfPadding = other.sdfPadding;
-        this->buffer = other.buffer;
-        this->path = {};
-        this->path.addPath(other.path);
-        return *this;
-    }
-
 };
 }  // namespace tgfx

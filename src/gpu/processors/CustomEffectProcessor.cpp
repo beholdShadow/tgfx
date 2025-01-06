@@ -19,11 +19,12 @@
 #include "gpu/processors/CustomEffectProcessor.h"
 
 namespace tgfx {
-std::unique_ptr<CustomEffectProcessor> CustomEffectProcessor::Make(const std::string& fragShader, const std::vector<ShaderVar>& params) {
-  return std::unique_ptr<CustomEffectProcessor>(new CustomEffectProcessor(fragShader, params));
+std::unique_ptr<CustomEffectProcessor> CustomEffectProcessor::Make(uint32_t id,  const std::string& fragShader, const std::vector<ShaderVar>& params) {
+  return std::unique_ptr<CustomEffectProcessor>(new CustomEffectProcessor(id, fragShader, params));
 }
 
-void CustomEffectProcessor::onComputeProcessorKey(BytesKey*) const {
+void CustomEffectProcessor::onComputeProcessorKey(BytesKey* bytesKey) const {
+  bytesKey->write(id);
 }
 
 bool CustomEffectProcessor::onIsEqual(const FragmentProcessor&) const {

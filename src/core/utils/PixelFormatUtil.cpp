@@ -29,6 +29,8 @@ PixelFormat ColorTypeToPixelFormat(ColorType type) {
       return PixelFormat::BGRA_8888;
     case ColorType::Gray_8:
       return PixelFormat::GRAY_8;
+    case ColorType::RG_88:
+      return PixelFormat::RG_88;
     default:
       return PixelFormat::Unknown;
   }
@@ -44,6 +46,8 @@ ColorType PixelFormatToColorType(PixelFormat format) {
       return ColorType::BGRA_8888;
     case PixelFormat::GRAY_8:
       return ColorType::Gray_8;
+    case PixelFormat::RG_88:
+      return ColorType::RG_88;
     default:
       return ColorType::Unknown;
   }

@@ -24,7 +24,7 @@
 namespace tgfx {
 class CustomEffectProcessor : public FragmentProcessor {
  public:
-  static std::unique_ptr<CustomEffectProcessor> Make(const std::string& fragShader, const std::vector<ShaderVar>& params);
+  static std::unique_ptr<CustomEffectProcessor> Make(uint32_t id, const std::string& fragShader, const std::vector<ShaderVar>& params);
 
   std::string name() const override {
     return "CustomEffectProcessor";
@@ -40,12 +40,13 @@ class CustomEffectProcessor : public FragmentProcessor {
  protected:
   DEFINE_PROCESSOR_CLASS_ID
 
-  CustomEffectProcessor(const std::string& fragShader, const std::vector<ShaderVar>& params)
-      : FragmentProcessor(ClassID()), fragShader(fragShader), params(params) {
+  CustomEffectProcessor(uint32_t id,  const std::string& fragShader, const std::vector<ShaderVar>& params)
+      : FragmentProcessor(ClassID()), id(id), fragShader(fragShader), params(params) {
   }
 
   bool onIsEqual(const FragmentProcessor& processor) const override;
 
+  uint32_t id;
   std::string fragShader;
   std::vector<ShaderVar> params;
 };

@@ -33,7 +33,7 @@ void CustomShader::setCustomParams(const std::vector<ShaderVar>& params) {
 
 std::unique_ptr<FragmentProcessor> CustomShader::asFragmentProcessor(const FPArgs&,
                                                                     const Matrix*) const {
-  return CustomEffectProcessor::Make(this->fragShader, this->params);
+  return CustomEffectProcessor::Make(this->id, this->fragShader, this->params);
 }
 
 }  // namespace tgfx

@@ -67,7 +67,7 @@ bool PlainTexture::CheckSizeAndFormat(Context* context, int width, int height, P
     return false;
   }
   if (format != PixelFormat::ALPHA_8 && format != PixelFormat::RGBA_8888 &&
-      format != PixelFormat::BGRA_8888) {
+      format != PixelFormat::BGRA_8888 && format != PixelFormat::RG_88) {
     return false;
   }
   auto caps = context->caps();

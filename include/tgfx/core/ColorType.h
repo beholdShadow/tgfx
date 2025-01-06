@@ -67,6 +67,8 @@ enum class ColorType {
    * require alpha blending, such that the memory cost is the same as RGBA_8888 while enabling
    * higher color precision.
    */
-  RGBA_1010102
+  RGBA_1010102,
+  
+  RG_88,
 };
 }  // namespace tgfx

@@ -175,13 +175,7 @@ void RenderContext::drawImageRect(std::shared_ptr<Image> image, const Rect& rect
   }
   auto drawOp = RectDrawOp::Make(style.color, localBounds, state.matrix);
   drawOp->addColorFP(std::move(processor));
-  if (!isAlphaOnly && style.shader) {
-    auto fillStyle = style;
-    fillStyle.shader = nullptr;
-    addDrawOp(std::move(drawOp), localBounds, state, fillStyle);
-  } else {
-    addDrawOp(std::move(drawOp), localBounds, state, style);
-  }
+  addDrawOp(std::move(drawOp), localBounds, state, style);
 }
 
 void RenderContext::drawGlyphRunList(std::shared_ptr<GlyphRunList> glyphRunList,

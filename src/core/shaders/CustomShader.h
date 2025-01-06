@@ -19,11 +19,12 @@
 #pragma once
 
 #include "tgfx/core/Shader.h"
-
+#include "core/utils/UniqueID.h"
 namespace tgfx {
 class CustomShader : public Shader {
  public:
   explicit CustomShader(std::string fragShader, std::vector<ShaderVar> params):fragShader(fragShader), params(std::move(params)) {
+    id = UniqueID::Next();
   }
   virtual void setCustomParams(const std::vector<ShaderVar>& params) override;
  protected:
@@ -31,6 +32,7 @@ class CustomShader : public Shader {
                                                          const Matrix* uvMatrix) const override;
 
  private:
+  uint32_t id;
   std::string fragShader;
   std::vector<ShaderVar> params;
 };

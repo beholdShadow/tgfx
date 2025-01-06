@@ -204,6 +204,7 @@ bool GLCaps::isFormatRenderable(PixelFormat pixelFormat) const {
     case PixelFormat::BGRA_8888:
       return true;
     case PixelFormat::ALPHA_8:
+    case PixelFormat::RG_88:
       if (textureRedSupport) {
         return true;
       }

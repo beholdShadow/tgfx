@@ -31,6 +31,7 @@ size_t ImageInfo::GetBytesPerPixel(ColorType colorType) {
     case ColorType::Gray_8:
       return 1;
     case ColorType::RGB_565:
+    case ColorType::RG_88:
       return 2;
     case ColorType::RGBA_8888:
     case ColorType::BGRA_8888:
