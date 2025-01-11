@@ -167,7 +167,6 @@ void RenderContext::drawImageRect(std::shared_ptr<Image> image, const Rect& rect
   if (localBounds.isEmpty()) {
     return;
   }
-  auto isAlphaOnly = image->isAlphaOnly();
   FPArgs args = {getContext(), renderFlags, localBounds, state.matrix};
   auto processor = FragmentProcessor::Make(std::move(image), args, sampling);
   if (processor == nullptr) {

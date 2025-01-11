@@ -22,6 +22,1251 @@
 #include "tgfx/core/Rect.h"
 
 namespace tgfx {
+const uint32_t MaxUInt32 = 0xFFFFFFFF;
+const float MaxFloat     = 3.402823466e+38F;
+const float MinPosFloat  = 1.175494351e-38F;
+    
+const float Pi     = 3.141592654f;
+const float TwoPi  = 6.283185307f;
+const float PiHalf = 1.570796327f;
+
+const float Epsilon = 0.000001f;
+const float ZeroEpsilon = 32.0f * MinPosFloat;  // Very small epsilon for checking against 0.0f
+
+static inline float degToRad(float f)
+{
+    return f * 0.017453293f;
+}
+
+static inline float radToDeg(float f)
+{
+    return f * 57.29577951f;
+}
+
+inline bool IsFloatEqual(float x, float y, float tol = 0.0001f)
+{
+    bool bRet = false;
+    if (std::abs(x - y) < tol)
+    {
+        bRet = true;
+    }
+    return bRet;
+}
+inline bool IsFloatZero(float val, float tol = 0.0001f)
+{
+    return IsFloatEqual(val, 0.0f, tol);
+}
+template<class T>
+inline T Clamp(const T& t, const T& tLow, const T& tHigh)
+{
+    if (t < tHigh)
+    {
+        return ((t > tLow) ? t : tLow);
+    }
+    return tHigh;
+}
+class Vec3f
+{
+public:
+    float x, y, z;
+    
+    // ------------
+    // Constructors
+    // ------------
+    Vec3f() : x( 0.0f ), y( 0.0f ), z( 0.0f )
+    { 
+    }
+    
+    Vec3f( const float x, const float y, const float z ) : x( x ), y( y ), z( z ) 
+    {
+    }
+
+    Vec3f( const Vec3f &v ) : x( v.x ), y( v.y ), z( v.z )
+    {
+    }
+    Vec3f& operator=(const Vec3f& other) {
+      if (this != &other) { // 避免自赋值
+          x = other.x;
+          y = other.y;
+          z = other.z;
+      }
+      return *this;
+    }
+    void set(const float x, const float y, const float z)
+    {
+        this->x = x;
+        this->y = y;
+        this->z = z;
+    }
+
+    // ------
+    // Access
+    // ------
+    float &operator[]( uint32_t index )
+    {
+        return *(&x + index);
+    }
+
+    const float &operator[](uint32_t index) const
+    {
+        return *(&x + index);
+    }
+    
+    // -----------
+    // Comparisons
+    // -----------
+    bool operator==( const Vec3f &v ) const
+    {
+        return IsFloatEqual(x, v.x) && IsFloatEqual(y, v.y) && IsFloatEqual(z, v.z);
+    }
+
+    bool operator!=( const Vec3f &v ) const
+    {
+        return !(*this == v);
+    }
+    
+    // ---------------------
+    // Arithmetic operations
+    // ---------------------
+    Vec3f operator-() const
+    {
+        return Vec3f( -x, -y, -z );
+    }
+
+    Vec3f operator+( const Vec3f &v ) const
+    {
+        return Vec3f( x + v.x, y + v.y, z + v.z );
+    }
+
+    Vec3f &operator+=( const Vec3f &v )
+    {
+        return *this = *this + v;
+    }
+
+    Vec3f operator-( const Vec3f &v ) const 
+    {
+        return Vec3f( x - v.x, y - v.y, z - v.z );
+    }
+
+    Vec3f &operator-=( const Vec3f &v )
+    {
+        return *this = *this - v;
+    }
+
+    Vec3f operator*( const float f ) const
+    {
+        return Vec3f( x * f, y * f, z * f );
+    }
+
+    Vec3f &operator*=( const float f )
+    {
+        x *= f;
+        y *= f;
+        z *= f;
+        return *this;
+    }
+
+    Vec3f operator/( const float f ) const
+    {
+        return Vec3f( x / f, y / f, z / f );
+    }
+
+    Vec3f &operator/=( const float f )
+    {
+        x /= f;
+        y /= f;
+        z /= f;
+        return *this;
+    }
+
+    // ----------------
+    // Special products
+    // ----------------
+    float dot( const Vec3f &v ) const
+    {
+        return x * v.x + y * v.y + z * v.z;
+    }
+
+    Vec3f cross( const Vec3f &v ) const
+    {
+        return Vec3f( y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x );
+    }
+
+    // ----------------
+    // Other operations
+    // ----------------
+    float length() const 
+    {
+        return sqrtf( x * x + y * y + z * z );
+    }
+
+    float sqrLength() const
+    {
+        return x * x + y * y + z * z;
+    }
+
+    Vec3f normalized() const
+    {
+        float l = length();
+        if (l < 0.000001f)
+        {
+            return Vec3f(0.0f, 0.0f, 0.0f);
+        }
+        float invLen = 1.0f / l;
+        return Vec3f( x * invLen, y * invLen, z * invLen );
+    }
+
+    void normalize()
+    {
+        float l = length();
+        if (l < 0.000001f)
+        {
+            x = 0.0f;
+            y = 0.0f;
+            z = 0.0f;
+            return;
+        }
+
+        float invLen = 1.0f / l;
+        x *= invLen;
+        y *= invLen;
+        z *= invLen;
+    }
+
+    static Vec3f Normalize(const Vec3f& v)
+    {
+        return v.normalized();
+    }
+
+    /*void fromRotation( float angleX, float angleY )
+    {
+        x = cosf( angleX ) * sinf( angleY ); 
+        y = -sinf( angleX );
+        z = cosf( angleX ) * cosf( angleY );
+    }*/
+
+    Vec3f toRotation() const
+    {
+        // Assumes that the unrotated view vector is (0, 0, -1)
+        Vec3f v;
+        
+        if( y != 0 ) v.x = atan2f( y, sqrtf( x*x + z*z ) );
+        if( x != 0 || z != 0 ) v.y = atan2f( -x, -z );
+
+        return v;
+    }
+
+    Vec3f lerp( const Vec3f &v, float f ) const
+    {
+        return Vec3f( x + (v.x - x) * f, y + (v.y - y) * f, z + (v.z - z) * f ); 
+    }
+
+    static Vec3f Lerp(const Vec3f& a, const Vec3f& b, float f)
+    {
+        return a.lerp(b, f);
+    }
+
+    static float Angle(const Vec3f& from, const Vec3f& to)
+    {
+        float mod = from.sqrLength() * to.sqrLength();
+        float dot = from.dot(to) / sqrt(mod);
+        dot = Clamp(dot, -1.0f, 1.0f);
+        
+        float deg = radToDeg(acos(dot));
+
+        return deg;
+    }
+};
+class Vec4f
+{
+public:
+    float x, y, z, w;
+
+    Vec4f() : x( 0.0f ), y( 0.0f ), z( 0.0f ), w( 0.0f )
+    {
+    }
+
+    explicit Vec4f( const float x, const float y, const float z, const float w ) :
+        x( x ), y( y ), z( z ), w( w )
+    {
+    }
+
+    explicit Vec4f( Vec3f v ) : x( v.x ), y( v.y ), z( v.z ), w( 1.0f )
+    {
+    }
+
+    Vec4f operator+( const Vec4f &v ) const
+    {
+        return Vec4f( x + v.x, y + v.y, z + v.z, w + v.w );
+    }
+
+    Vec4f operator-(const Vec4f &v) const
+    {
+        return Vec4f(x - v.x, y - v.y, z - v.z, w - v.w);
+    }
+
+    Vec4f operator-() const
+    {
+        return Vec4f( -x, -y, -z, -w );
+    }
+    
+    Vec4f operator*( const float f ) const
+    {
+        return Vec4f( x * f, y * f, z * f, w * f );
+    }
+
+    Vec4f operator/(const float f) const
+    {
+        return Vec4f(x / f, y / f, z / f, w / f);
+    }
+
+    bool operator==(const Vec4f& right) const
+    {
+        return 
+            IsFloatEqual(x, right.x) &&
+            IsFloatEqual(y, right.y) && 
+            IsFloatEqual(z, right.z) && 
+            IsFloatEqual(w, right.w);
+    }
+
+    bool operator!=(const Vec4f& right) const
+    {
+        return !(*this == right);
+    }
+
+    void set(const float x, const float y, const float z, const float w)
+    {
+        this->x = x;
+        this->y = y;
+        this->z = z;
+        this->w = w;
+    }
+};
+class Quaternion
+{
+public:
+    float x, y, z, w;
+
+    static const Quaternion& identity()
+    {
+        static Quaternion value(0.0f, 0.0f, 0.0f, 1.0f);
+        return value;
+    }
+
+    // ------------
+    // Constructors
+    // ------------
+    Quaternion() : x( 0.0f ), y( 0.0f ), z( 0.0f ), w( 0.0f ) 
+    { 
+    }
+    
+    explicit Quaternion( const float x, const float y, const float z, const float w ) :
+        x( x ), y( y ), z( z ), w( w )
+    {
+    }
+    
+    Quaternion( const float eulerX, const float eulerY, const float eulerZ )
+    {
+      float roll = eulerX, pitch = eulerY, yaw = eulerZ;
+      float cy = static_cast<float>(cos(yaw * 0.5));
+      float sy = static_cast<float>(sin(yaw * 0.5));
+      float cp = static_cast<float>(cos(pitch * 0.5));
+      float sp = static_cast<float>(sin(pitch * 0.5));
+      float cr = static_cast<float>(cos(roll * 0.5));
+      float sr = static_cast<float>(sin(roll * 0.5));
+
+      w = cr * cp * cy + sr * sp * sy;
+      x = sr * cp * cy + cr * sp * sy;
+      y = cr * sp * cy - sr * cp * sy;
+      z = cr * cp * sy - sr * sp * cy;// Order: y * x * z, y axis as main axis
+    }
+
+    // ---------------------
+    // Arithmetic operations
+    // ---------------------
+    Quaternion operator*( const Quaternion &q ) const
+    {
+        return Quaternion(
+            y * q.z - z * q.y + q.x * w + x * q.w,
+            z * q.x - x * q.z + q.y * w + y * q.w,
+            x * q.y - y * q.x + q.z * w + z * q.w,
+            w * q.w - (x * q.x + y * q.y + z * q.z)
+        );
+    }
+
+    Quaternion &operator*=( const Quaternion &q )
+    {
+        return *this = *this * q;
+    }
+
+    bool operator ==(const Quaternion &q)
+    {
+        return IsFloatEqual(x, q.x) && IsFloatEqual(y, q.y) && IsFloatEqual(z, q.z) && IsFloatEqual(w, q.w);
+    }
+
+    bool operator !=(const Quaternion &q)
+    {
+        return !(*this == q);
+    }
+
+    Quaternion slerp( const Quaternion &q, const float t ) const
+    {
+        // Spherical linear interpolation between two quaternions
+        // Note: SLERP is not commutative
+        
+        Quaternion q1( q );
+
+        // Calculate cosine
+        float cosTheta = x * q.x + y * q.y + z * q.z + w * q.w;
+
+        // Use the shortest path
+        if( cosTheta < 0 )
+        {
+            cosTheta = -cosTheta; 
+            q1.x = -q.x; q1.y = -q.y;
+            q1.z = -q.z; q1.w = -q.w;
+        }
+
+        // Initialize with linear interpolation
+        float scale0 = 1 - t, scale1 = t;
+        
+        // Use spherical interpolation only if the quaternions are not very close
+        if( (1 - cosTheta) > 0.001f )
+        {
+            // SLERP
+            float theta = acosf( cosTheta );
+            float sinTheta = sinf( theta );
+            scale0 = sinf( (1 - t) * theta ) / sinTheta;
+            scale1 = sinf( t * theta ) / sinTheta;
+        } 
+        
+        // Calculate final quaternion
+        return Quaternion(
+            x * scale0 + q1.x * scale1, y * scale0 + q1.y * scale1,
+            z * scale0 + q1.z * scale1, w * scale0 + q1.w * scale1
+        );
+    }
+
+    Quaternion nlerp( const Quaternion &q, const float t ) const
+    {
+        // Normalized linear quaternion interpolation
+        // Note: NLERP is faster than SLERP and commutative but does not yield constant velocity
+
+        Quaternion qt;
+        float cosTheta = x * q.x + y * q.y + z * q.z + w * q.w;
+        
+        // Use the shortest path and interpolate linearly
+        if (cosTheta < 0)
+        {
+            qt = Quaternion(
+                x + (-q.x - x) * t, y + (-q.y - y) * t,
+                z + (-q.z - z) * t, w + (-q.w - w) * t
+            );
+        }
+        else
+        {
+            qt = Quaternion(
+                x + (q.x - x) * t, y + (q.y - y) * t,
+                z + (q.z - z) * t, w + (q.w - w) * t
+            );
+        }
+
+        // Return normalized quaternion
+        float invLen = 1.0f / sqrtf( qt.x * qt.x + qt.y * qt.y + qt.z * qt.z + qt.w * qt.w );
+        return Quaternion( qt.x * invLen, qt.y * invLen, qt.z * invLen, qt.w * invLen );
+    }
+
+    Quaternion inverted() const
+    {
+        float len = x * x + y * y + z * z + w * w;
+        if( len > 0 )
+        {
+            float invLen = 1.0f / len;
+            return Quaternion( -x * invLen, -y * invLen, -z * invLen, w * invLen );
+        }
+        else return Quaternion();
+    }
+
+    Vec3f operator *(const Vec3f& p) const
+    {
+        Quaternion p_ = *this * Quaternion(p.x, p.y, p.z, 0) * this->inverted();
+
+        return Vec3f(p_.x, p_.y, p_.z);
+    }
+
+    float dot(const Quaternion& v) const
+    {
+        return x * v.x + y * v.y + z * v.z + w * v.w;
+    }
+
+    float length() const
+    {
+        return sqrtf(x * x + y * y + z * z + w * w);
+    }
+
+    Quaternion normalized() const
+    {
+        float l = length();
+        if (l < Epsilon)
+        {
+            return identity();
+        }
+        
+        return Quaternion(x / l, y / l, z / l, w / l);
+    }
+
+    void normalize()
+    {
+        //*this = this->normalized();
+
+        float l = length();
+        if (l < Epsilon)
+        {
+            x = 0.0f;
+            y = 0.0f;
+            z = 0.0f;
+            w = 1.0f;
+        }
+        x /= l;
+        y /= l;
+        z /= l;
+        w /= l;
+    }
+
+    static Quaternion AngleAxis(float angle, const Vec3f& axis)
+    {
+        Vec3f v = Vec3f::Normalize(axis);
+        float cosv, sinv;
+        
+        cosv = cos(degToRad(angle * 0.5f));
+        sinv = sin(degToRad(angle * 0.5f));
+
+        float x = v.x * sinv;
+        float y = v.y * sinv;
+        float z = v.z * sinv;
+        float w = cosv;
+
+        return Quaternion(x, y, z, w);
+    }
+
+    static Quaternion FromToRotation(const Vec3f& from_direction, const Vec3f& to_direction)
+    {
+        Vec3f origin = Vec3f::Normalize(from_direction);
+        Vec3f fn = Vec3f::Normalize(to_direction);
+
+        if (fn != origin)
+        {
+            if (!IsFloatZero(fn.sqrLength()) && !IsFloatZero(origin.sqrLength()))
+            {
+                float deg = Vec3f::Angle(origin, fn);
+                Vec3f axis = origin.cross(fn);
+                
+                if (axis == Vec3f(0, 0, 0))
+                {
+                    if (!IsFloatZero(origin.x))
+                    {
+                        float x = -origin.y / origin.x;
+                        float y = 1;
+                        float z = 0;
+
+                        axis = Vec3f(x, y, z);
+                    }
+                    else if (!IsFloatZero(origin.y))
+                    {
+                        float y = -origin.z / origin.y;
+                        float x = 0;
+                        float z = 1;
+
+                        axis = Vec3f(x, y, z);
+                    }
+                    else
+                    {
+                        float z = -origin.x / origin.z;
+                        float y = 0;
+                        float x = 1;
+
+                        axis = Vec3f(x, y, z);
+                    }
+
+                    return AngleAxis(deg, axis);
+                }
+                else
+                {
+                    return AngleAxis(deg, axis);
+                }
+            }
+        }
+
+        return identity();
+    }
+
+    static Quaternion LookRotation(const Vec3f& forward, const Vec3f& up)
+    {
+        Vec3f un = up.normalized();
+        Vec3f fn = forward.normalized();
+
+        Quaternion rot0 = FromToRotation(Vec3f(0, 1, 0), un);
+        Vec3f f = rot0 * Vec3f(0, 0, 1);
+        float deg = Vec3f::Angle(f, fn);
+        Quaternion rot1;
+        Vec3f axis = f.cross(fn);
+        float d = axis.dot(un);
+        if (d > 0)
+        {
+            rot1 = AngleAxis(deg, up);
+        }
+        else
+        {
+            rot1 = AngleAxis(-deg, up);
+        }
+        return rot1 * rot0;
+    }
+
+    static Quaternion Euler(const Vec3f& euler)
+    {
+        return Quaternion(euler.x, euler.y, euler.z);
+    }
+
+    static Quaternion EulerRadians(float x, float y, float z)
+    {
+        return Quaternion(x, y, z);
+    }
+
+    static Quaternion EulerDegree(float x, float y, float z)
+    {
+        return Quaternion(degToRad(x), degToRad(y), degToRad(z));
+    }
+
+    Vec3f toEulerAngles() const
+    {
+        float rx = atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
+        float ry = asin(2 * (w * y - z * x));
+        float rz = atan2(2 * (w * z + x * y), 1 - 2 * (z * z + y * y));
+        
+        return Vec3f(radToDeg(rx), radToDeg(ry), radToDeg(rz));
+    }
+
+	Vec3f toEulerAngles2() const
+	{
+		float rx = asin(2 * (w * x - y * z));
+		float ry = atan2(2 * (w * y + x * z), 1 - 2 * (x * x + y * y));
+		float rz = atan2(2 * (w * z + x * y), 1 - 2 * (z * z + x * x));
+
+		return Vec3f(radToDeg(rx), radToDeg(ry), radToDeg(rz));
+	}
+};
+class Matrix4f
+{
+public:
+    union
+    {
+        float c[4][4];    // Column major order for OpenGL: c[column][row]
+        float x[16];
+    };
+
+    static Matrix4f TransMat( float x, float y, float z )
+    {
+        Matrix4f m;
+
+        m.c[3][0] = x;
+        m.c[3][1] = y;
+        m.c[3][2] = z;
+
+        return m;
+    }
+
+    static Matrix4f ScaleMat( float x, float y, float z )
+    {
+        Matrix4f m;
+        
+        m.c[0][0] = x;
+        m.c[1][1] = y;
+        m.c[2][2] = z;
+
+        return m;
+    }
+
+    static Matrix4f RotMat( float x, float y, float z ) // x, y, z in radians
+    {
+        // Rotation order: YXZ [* Vector]
+        return Matrix4f( Quaternion( x, y, z ) );
+    }
+
+    static Matrix4f RotMat( Vec3f axis, float angle )
+    {
+        axis.normalize();
+        axis *= sinf( angle * 0.5f );
+        return Matrix4f( Quaternion( axis.x, axis.y, axis.z, cosf( angle * 0.5f ) ) );
+    }
+
+    static Matrix4f TRS(const Vec3f& translate, const Quaternion& rotate, const Vec3f& scale)
+    {
+        Matrix4f mt = TransMat(translate.x, translate.y, translate.z);
+        Matrix4f mr = Matrix4f(rotate);
+        Matrix4f ms = ScaleMat(scale.x, scale.y, scale.z);
+
+        return mt * mr * ms;
+    }
+
+    static void LookAtRH(Matrix4f& result,
+        const Vec3f& eye,
+        const Vec3f& target,
+        const Vec3f& up)
+    {
+      Vec3f f = eye - target; f.normalize();
+      Vec3f s = up.cross(f); s.normalize();
+      Vec3f u = f.cross(s); u.normalize();
+
+      result.c[0][0] = s.x;
+      result.c[1][0] = s.y;
+      result.c[2][0] = s.z;
+      result.c[0][1] = u.x;
+      result.c[1][1] = u.y;
+      result.c[2][1] = u.z;
+      result.c[0][2] = f.x;
+      result.c[1][2] = f.y;
+      result.c[2][2] = f.z;
+      result.c[3][0] = -s.dot(eye);
+      result.c[3][1] = -u.dot(eye);
+      result.c[3][2] = -f.dot(eye);
+      result.c[3][3] = 1.0;
+    }
+
+    static Matrix4f LookAtMatRH(
+        const Vec3f& eye,
+        const Vec3f& target,
+        const Vec3f& up)
+    {
+        Matrix4f m;
+        Matrix4f::LookAtRH(m, eye, target, up);
+        return m;
+    }
+
+	static Matrix4f LookAtMatLH(
+		const Vec3f& eye,
+		const Vec3f& target,
+		const Vec3f& up)
+	{
+		Matrix4f m;
+		Vec3f f = target - eye; f.normalize();
+		Vec3f s = up.cross(f); s.normalize();
+		Vec3f u = f.cross(s); u.normalize();
+
+		m.c[0][0] = s.x;
+		m.c[1][0] = s.y;
+		m.c[2][0] = s.z;
+		m.c[0][1] = u.x;
+		m.c[1][1] = u.y;
+		m.c[2][1] = u.z;
+		m.c[0][2] = f.x;
+		m.c[1][2] = f.y;
+		m.c[2][2] = f.z;
+		m.c[3][0] = -s.dot(eye);
+		m.c[3][1] = -u.dot(eye);
+		m.c[3][2] = -f.dot(eye);
+
+		return m;
+	}
+
+  static Matrix4f PerspectiveMatRH(float fov, float aspect, float n, float f)
+  {
+      float frustumH = tanf(fov / 360.0f * Pi) * n;
+      float frustumW = frustumH * aspect;
+      return Matrix4f::PerspectiveMatRH(-frustumW, frustumW, -frustumH, frustumH, n, f);
+  }
+
+  static Matrix4f PerspectiveMatRH( float l, float r, float b, float t, float n, float f )
+  {
+      Matrix4f m;
+
+      m.x[0] = 2 * n / (r - l);
+      m.x[5] = 2 * n / (t - b);
+      m.x[8] = (r + l) / (r - l);
+      m.x[9] = (t + b) / (t - b);
+      m.x[10] = -(f + n) / (f - n);
+      m.x[11] = -1;
+      m.x[14] = -2 * f * n / (f - n);
+      m.x[15] = 0;
+
+      return m;
+  }
+
+	static Matrix4f PerspectiveMatLH(float fov, float aspect, float n, float f)
+	{
+		float frustumH = tanf(fov / 360.0f * Pi) * n;
+		float frustumW = frustumH * aspect;
+
+		auto cal = [=](float l, float r, float b, float t, float n, float f)->Matrix4f
+		{
+			Matrix4f m;
+
+			m.x[0] = 2 * n / (r - l);
+			m.x[5] = 2 * n / (t - b);
+			m.x[8] = -(r + l) / (r - l);
+			m.x[9] = -(t + b) / (t - b);
+			m.x[10] = (f + n) / (f - n);
+			m.x[11] = 1;
+			m.x[14] = -2 * f * n / (f - n);
+			m.x[15] = 0;
+
+			return m;
+		};
+
+		return cal(-frustumW, frustumW, -frustumH, frustumH, n, f);
+	}
+
+  static Matrix4f OrthoMatRH( float l, float r, float b, float t, float n, float f )
+  {
+      Matrix4f m;
+
+      m.x[0] = 2 / (r - l);
+      m.x[5] = 2 / (t - b);
+      m.x[10] = -2 / (f - n);
+      m.x[12] = -(r + l) / (r - l);
+      m.x[13] = -(t + b) / (t - b);
+      m.x[14] = -(f + n) / (f - n);
+
+      return m;
+  }
+
+	static Matrix4f OrthoMatLH(float l, float r, float b, float t, float n, float f)
+	{
+		Matrix4f m;
+		m.x[0] = 2 / (r - l);
+		m.x[5] = 2 / (t - b);
+		m.x[10] = 2 / (f - n);
+		m.x[12] = -(r + l) / (r - l);
+		m.x[13] = -(t + b) / (t - b);
+		m.x[14] = -(f + n) / (f - n);
+
+		return m;
+	}
+
+  static void fastMult43( Matrix4f &dst, const Matrix4f &m1, const Matrix4f &m2 )
+  {
+      // Note: dst may not be the same as m1 or m2
+
+      float *dstx = dst.x;
+      const float *m1x = m1.x;
+      const float *m2x = m2.x;
+      
+      dstx[0] = m1x[0] * m2x[0] + m1x[4] * m2x[1] + m1x[8] * m2x[2];
+      dstx[1] = m1x[1] * m2x[0] + m1x[5] * m2x[1] + m1x[9] * m2x[2];
+      dstx[2] = m1x[2] * m2x[0] + m1x[6] * m2x[1] + m1x[10] * m2x[2];
+      dstx[3] = 0.0f;
+
+      dstx[4] = m1x[0] * m2x[4] + m1x[4] * m2x[5] + m1x[8] * m2x[6];
+      dstx[5] = m1x[1] * m2x[4] + m1x[5] * m2x[5] + m1x[9] * m2x[6];
+      dstx[6] = m1x[2] * m2x[4] + m1x[6] * m2x[5] + m1x[10] * m2x[6];
+      dstx[7] = 0.0f;
+
+      dstx[8] = m1x[0] * m2x[8] + m1x[4] * m2x[9] + m1x[8] * m2x[10];
+      dstx[9] = m1x[1] * m2x[8] + m1x[5] * m2x[9] + m1x[9] * m2x[10];
+      dstx[10] = m1x[2] * m2x[8] + m1x[6] * m2x[9] + m1x[10] * m2x[10];
+      dstx[11] = 0.0f;
+
+      dstx[12] = m1x[0] * m2x[12] + m1x[4] * m2x[13] + m1x[8] * m2x[14] + m1x[12] * m2x[15];
+      dstx[13] = m1x[1] * m2x[12] + m1x[5] * m2x[13] + m1x[9] * m2x[14] + m1x[13] * m2x[15];
+      dstx[14] = m1x[2] * m2x[12] + m1x[6] * m2x[13] + m1x[10] * m2x[14] + m1x[14] * m2x[15];
+      dstx[15] = 1.0f;
+  }
+
+    // ------------
+    // Constructors
+    // ------------
+    Matrix4f()
+    {
+        c[0][0] = 1; c[1][0] = 0; c[2][0] = 0; c[3][0] = 0;
+        c[0][1] = 0; c[1][1] = 1; c[2][1] = 0; c[3][1] = 0;
+        c[0][2] = 0; c[1][2] = 0; c[2][2] = 1; c[3][2] = 0;
+        c[0][3] = 0; c[1][3] = 0; c[2][3] = 0; c[3][3] = 1;
+    }
+
+    Matrix4f(float m11, float m12, float m13, float m14, float m21, float m22, float m23, float m24,
+             float m31, float m32, float m33, float m34, float m41, float m42, float m43, float m44)
+    {
+        x[ 0 ]  = m11; x[ 1 ]  = m21; x[ 2 ]  = m31; x[ 3 ]  = m41;
+        x[ 4 ]  = m12; x[ 5 ]  = m22; x[ 6 ]  = m32; x[ 7 ]  = m42;
+        x[ 8 ]  = m13; x[ 9 ]  = m23; x[ 10 ] = m33; x[ 11 ] = m43;
+        x[ 12 ] = m14; x[ 13 ] = m24; x[ 14 ] = m34; x[ 15 ] = m44;
+    }
+
+    Matrix4f( const float *floatArray16 )
+    {
+        for(uint32_t i = 0; i < 4; ++i)
+        {
+            for(uint32_t j = 0; j < 4; ++j)
+            {
+                c[i][j] = floatArray16[i * 4 + j];
+            }
+        }
+    }
+
+    Matrix4f( const Quaternion &q )
+    {
+        // Calculate coefficients
+        float x2 = q.x + q.x, y2 = q.y + q.y, z2 = q.z + q.z;
+        float xx = q.x * x2,  xy = q.x * y2,  xz = q.x * z2;
+        float yy = q.y * y2,  yz = q.y * z2,  zz = q.z * z2;
+        float wx = q.w * x2,  wy = q.w * y2,  wz = q.w * z2;
+
+        c[0][0] = 1 - (yy + zz);  c[1][0] = xy - wz;    
+        c[2][0] = xz + wy;        c[3][0] = 0;
+        c[0][1] = xy + wz;        c[1][1] = 1 - (xx + zz);
+        c[2][1] = yz - wx;        c[3][1] = 0;
+        c[0][2] = xz - wy;        c[1][2] = yz + wx;
+        c[2][2] = 1 - (xx + yy);  c[3][2] = 0;
+        c[0][3] = 0;              c[1][3] = 0;
+        c[2][3] = 0;              c[3][3] = 1;
+    }
+
+    Matrix4f(const Matrix4f &m) {
+      if (this != &m) {
+        memcpy(x, m.x, sizeof(Matrix4f));
+      }
+    }
+     // ----------
+    // Matrix sum
+    // ----------
+    Matrix4f operator+( const Matrix4f &m ) const 
+    {
+        Matrix4f mf;
+        
+        mf.x[0]  = x[0]  + m.x[0];
+        mf.x[1]  = x[1]  + m.x[1];
+        mf.x[2]  = x[2]  + m.x[2];
+        mf.x[3]  = x[3]  + m.x[3];
+        mf.x[4]  = x[4]  + m.x[4];
+        mf.x[5]  = x[5]  + m.x[5];
+        mf.x[6]  = x[6]  + m.x[6];
+        mf.x[7]  = x[7]  + m.x[7];
+        mf.x[8]  = x[8]  + m.x[8];
+        mf.x[9]  = x[9]  + m.x[9];
+        mf.x[10] = x[10] + m.x[10];
+        mf.x[11] = x[11] + m.x[11];
+        mf.x[12] = x[12] + m.x[12];
+        mf.x[13] = x[13] + m.x[13];
+        mf.x[14] = x[14] + m.x[14];
+        mf.x[15] = x[15] + m.x[15];
+
+        return mf;
+    }
+
+    Matrix4f &operator+=( const Matrix4f &m )
+    {
+        return *this = *this + m;
+    }
+
+    Matrix4f &operator=(const Matrix4f &m)
+    {
+        memcpy(x, m.x, sizeof(Matrix4f));
+        return *this;
+    }
+
+    Matrix4f operator*( const Matrix4f &m ) const
+    {
+        Matrix4f mf;
+        
+        mf.x[0] = x[0] * m.x[0] + x[4] * m.x[1] + x[8] * m.x[2] + x[12] * m.x[3];
+        mf.x[1] = x[1] * m.x[0] + x[5] * m.x[1] + x[9] * m.x[2] + x[13] * m.x[3];
+        mf.x[2] = x[2] * m.x[0] + x[6] * m.x[1] + x[10] * m.x[2] + x[14] * m.x[3];
+        mf.x[3] = x[3] * m.x[0] + x[7] * m.x[1] + x[11] * m.x[2] + x[15] * m.x[3];
+
+        mf.x[4] = x[0] * m.x[4] + x[4] * m.x[5] + x[8] * m.x[6] + x[12] * m.x[7];
+        mf.x[5] = x[1] * m.x[4] + x[5] * m.x[5] + x[9] * m.x[6] + x[13] * m.x[7];
+        mf.x[6] = x[2] * m.x[4] + x[6] * m.x[5] + x[10] * m.x[6] + x[14] * m.x[7];
+        mf.x[7] = x[3] * m.x[4] + x[7] * m.x[5] + x[11] * m.x[6] + x[15] * m.x[7];
+
+        mf.x[8] = x[0] * m.x[8] + x[4] * m.x[9] + x[8] * m.x[10] + x[12] * m.x[11];
+        mf.x[9] = x[1] * m.x[8] + x[5] * m.x[9] + x[9] * m.x[10] + x[13] * m.x[11];
+        mf.x[10] = x[2] * m.x[8] + x[6] * m.x[9] + x[10] * m.x[10] + x[14] * m.x[11];
+        mf.x[11] = x[3] * m.x[8] + x[7] * m.x[9] + x[11] * m.x[10] + x[15] * m.x[11];
+
+        mf.x[12] = x[0] * m.x[12] + x[4] * m.x[13] + x[8] * m.x[14] + x[12] * m.x[15];
+        mf.x[13] = x[1] * m.x[12] + x[5] * m.x[13] + x[9] * m.x[14] + x[13] * m.x[15];
+        mf.x[14] = x[2] * m.x[12] + x[6] * m.x[13] + x[10] * m.x[14] + x[14] * m.x[15];
+        mf.x[15] = x[3] * m.x[12] + x[7] * m.x[13] + x[11] * m.x[14] + x[15] * m.x[15];
+
+        return mf;
+    }
+
+    Matrix4f operator*( float f ) const
+    {
+        Matrix4f m( *this );
+        
+        m.x[0]  *= f; m.x[1]  *= f; m.x[2]  *= f; m.x[3]  *= f;
+        m.x[4]  *= f; m.x[5]  *= f; m.x[6]  *= f; m.x[7]  *= f;
+        m.x[8]  *= f; m.x[9]  *= f; m.x[10] *= f; m.x[11] *= f;
+        m.x[12] *= f; m.x[13] *= f; m.x[14] *= f; m.x[15] *= f;
+
+        return m;
+    }
+
+    // ----------------------------
+    // Vector-Matrix multiplication
+    // ----------------------------
+    Vec3f operator*( const Vec3f &v ) const
+    {
+        return Vec3f(
+            v.x * c[0][0] + v.y * c[1][0] + v.z * c[2][0] + c[3][0],
+            v.x * c[0][1] + v.y * c[1][1] + v.z * c[2][1] + c[3][1],
+            v.x * c[0][2] + v.y * c[1][2] + v.z * c[2][2] + c[3][2]
+        );
+    }
+
+    Vec4f operator*( const Vec4f &v ) const
+    {
+        return Vec4f(
+            v.x * c[0][0] + v.y * c[1][0] + v.z * c[2][0] + v.w * c[3][0],
+            v.x * c[0][1] + v.y * c[1][1] + v.z * c[2][1] + v.w * c[3][1],
+            v.x * c[0][2] + v.y * c[1][2] + v.z * c[2][2] + v.w * c[3][2],
+            v.x * c[0][3] + v.y * c[1][3] + v.z * c[2][3] + v.w * c[3][3]
+        );
+    }
+
+    Vec3f multiplyPoint3x4(const Vec3f &v) const
+    {
+        return (*this) * v;
+    }
+
+    Vec3f multiplyDirection(const Vec3f& v) const
+    {
+        float vx, vy, vz;
+
+        vx = v.x * c[0][0] + v.y * c[1][0] + v.z * c[2][0];
+        vy = v.x * c[0][1] + v.y * c[1][1] + v.z * c[2][1];
+        vz = v.x * c[0][2] + v.y * c[1][2] + v.z * c[2][2];
+
+        return Vec3f(vx, vy, vz);
+    }
+
+    Vec3f mult33Vec( const Vec3f &v ) const
+    {
+        return Vec3f(
+            v.x * c[0][0] + v.y * c[1][0] + v.z * c[2][0] + c[3][0],
+            v.x * c[0][1] + v.y * c[1][1] + v.z * c[2][1] + c[3][1],
+            v.x * c[0][2] + v.y * c[1][2] + v.z * c[2][2] + c[3][2]
+        );
+    }
+
+    // ---------------
+    // Transformations
+    // ---------------
+    void translate( const float x, const float y, const float z )
+    {
+        *this = TransMat( x, y, z ) * *this;
+    }
+
+    void scale( const float x, const float y, const float z )
+    {
+        *this = ScaleMat( x, y, z ) * *this;
+    }
+
+    void scaleMix( const float x, const float y, const float z )
+    {
+        c[0][0] *= x;  c[1][0] *= y;  c[2][0] *= z;
+        c[0][1] *= x;  c[1][1] *= y;  c[2][1] *= z;
+        c[0][2] *= x;  c[1][2] *= y;  c[2][2] *= z;
+        c[0][3] *= x;  c[1][3] *= y;  c[2][3] *= z;
+    }
+
+    void rotate( const float x, const float y, const float z )
+    {
+        *this = RotMat( x, y, z ) * *this;
+    }
+
+    // ---------------
+    // Other
+    // ---------------
+    Matrix4f& transpose()
+    {
+        for (uint32_t y = 0; y < 4; ++y)
+        {
+            for (uint32_t x = y + 1; x < 4; ++x)
+            {
+                float tmp = c[x][y];
+                c[x][y] = c[y][x];
+                c[y][x] = tmp;
+            }
+        }
+
+        return *this;
+    }
+
+    Matrix4f transposed() const
+    {
+        Matrix4f m( *this );
+        for(uint32_t y = 0; y < 4; ++y)
+        {
+            for(uint32_t x = y + 1; x < 4; ++x) 
+            {
+                float tmp = m.c[x][y];
+                m.c[x][y] = m.c[y][x];
+                m.c[y][x] = tmp;
+            }
+        }
+
+        return m;
+    }
+
+    float determinant() const
+    {
+        return 
+            c[0][3]*c[1][2]*c[2][1]*c[3][0] - c[0][2]*c[1][3]*c[2][1]*c[3][0] - c[0][3]*c[1][1]*c[2][2]*c[3][0] + c[0][1]*c[1][3]*c[2][2]*c[3][0] +
+            c[0][2]*c[1][1]*c[2][3]*c[3][0] - c[0][1]*c[1][2]*c[2][3]*c[3][0] - c[0][3]*c[1][2]*c[2][0]*c[3][1] + c[0][2]*c[1][3]*c[2][0]*c[3][1] +
+            c[0][3]*c[1][0]*c[2][2]*c[3][1] - c[0][0]*c[1][3]*c[2][2]*c[3][1] - c[0][2]*c[1][0]*c[2][3]*c[3][1] + c[0][0]*c[1][2]*c[2][3]*c[3][1] +
+            c[0][3]*c[1][1]*c[2][0]*c[3][2] - c[0][1]*c[1][3]*c[2][0]*c[3][2] - c[0][3]*c[1][0]*c[2][1]*c[3][2] + c[0][0]*c[1][3]*c[2][1]*c[3][2] +
+            c[0][1]*c[1][0]*c[2][3]*c[3][2] - c[0][0]*c[1][1]*c[2][3]*c[3][2] - c[0][2]*c[1][1]*c[2][0]*c[3][3] + c[0][1]*c[1][2]*c[2][0]*c[3][3] +
+            c[0][2]*c[1][0]*c[2][1]*c[3][3] - c[0][0]*c[1][2]*c[2][1]*c[3][3] - c[0][1]*c[1][0]*c[2][2]*c[3][3] + c[0][0]*c[1][1]*c[2][2]*c[3][3];
+    }
+
+    Matrix4f inverted() const
+    {
+        Matrix4f m;
+
+        float d = determinant();
+        if( d == 0 ) return m;
+        d = 1.0f / d;
+
+        m.c[0][0] = d * (c[1][2]*c[2][3]*c[3][1] - c[1][3]*c[2][2]*c[3][1] + c[1][3]*c[2][1]*c[3][2] - c[1][1]*c[2][3]*c[3][2] - c[1][2]*c[2][1]*c[3][3] + c[1][1]*c[2][2]*c[3][3]);
+        m.c[0][1] = d * (c[0][3]*c[2][2]*c[3][1] - c[0][2]*c[2][3]*c[3][1] - c[0][3]*c[2][1]*c[3][2] + c[0][1]*c[2][3]*c[3][2] + c[0][2]*c[2][1]*c[3][3] - c[0][1]*c[2][2]*c[3][3]);
+        m.c[0][2] = d * (c[0][2]*c[1][3]*c[3][1] - c[0][3]*c[1][2]*c[3][1] + c[0][3]*c[1][1]*c[3][2] - c[0][1]*c[1][3]*c[3][2] - c[0][2]*c[1][1]*c[3][3] + c[0][1]*c[1][2]*c[3][3]);
+        m.c[0][3] = d * (c[0][3]*c[1][2]*c[2][1] - c[0][2]*c[1][3]*c[2][1] - c[0][3]*c[1][1]*c[2][2] + c[0][1]*c[1][3]*c[2][2] + c[0][2]*c[1][1]*c[2][3] - c[0][1]*c[1][2]*c[2][3]);
+        m.c[1][0] = d * (c[1][3]*c[2][2]*c[3][0] - c[1][2]*c[2][3]*c[3][0] - c[1][3]*c[2][0]*c[3][2] + c[1][0]*c[2][3]*c[3][2] + c[1][2]*c[2][0]*c[3][3] - c[1][0]*c[2][2]*c[3][3]);
+        m.c[1][1] = d * (c[0][2]*c[2][3]*c[3][0] - c[0][3]*c[2][2]*c[3][0] + c[0][3]*c[2][0]*c[3][2] - c[0][0]*c[2][3]*c[3][2] - c[0][2]*c[2][0]*c[3][3] + c[0][0]*c[2][2]*c[3][3]);
+        m.c[1][2] = d * (c[0][3]*c[1][2]*c[3][0] - c[0][2]*c[1][3]*c[3][0] - c[0][3]*c[1][0]*c[3][2] + c[0][0]*c[1][3]*c[3][2] + c[0][2]*c[1][0]*c[3][3] - c[0][0]*c[1][2]*c[3][3]);
+        m.c[1][3] = d * (c[0][2]*c[1][3]*c[2][0] - c[0][3]*c[1][2]*c[2][0] + c[0][3]*c[1][0]*c[2][2] - c[0][0]*c[1][3]*c[2][2] - c[0][2]*c[1][0]*c[2][3] + c[0][0]*c[1][2]*c[2][3]);
+        m.c[2][0] = d * (c[1][1]*c[2][3]*c[3][0] - c[1][3]*c[2][1]*c[3][0] + c[1][3]*c[2][0]*c[3][1] - c[1][0]*c[2][3]*c[3][1] - c[1][1]*c[2][0]*c[3][3] + c[1][0]*c[2][1]*c[3][3]);
+        m.c[2][1] = d * (c[0][3]*c[2][1]*c[3][0] - c[0][1]*c[2][3]*c[3][0] - c[0][3]*c[2][0]*c[3][1] + c[0][0]*c[2][3]*c[3][1] + c[0][1]*c[2][0]*c[3][3] - c[0][0]*c[2][1]*c[3][3]);
+        m.c[2][2] = d * (c[0][1]*c[1][3]*c[3][0] - c[0][3]*c[1][1]*c[3][0] + c[0][3]*c[1][0]*c[3][1] - c[0][0]*c[1][3]*c[3][1] - c[0][1]*c[1][0]*c[3][3] + c[0][0]*c[1][1]*c[3][3]);
+        m.c[2][3] = d * (c[0][3]*c[1][1]*c[2][0] - c[0][1]*c[1][3]*c[2][0] - c[0][3]*c[1][0]*c[2][1] + c[0][0]*c[1][3]*c[2][1] + c[0][1]*c[1][0]*c[2][3] - c[0][0]*c[1][1]*c[2][3]);
+        m.c[3][0] = d * (c[1][2]*c[2][1]*c[3][0] - c[1][1]*c[2][2]*c[3][0] - c[1][2]*c[2][0]*c[3][1] + c[1][0]*c[2][2]*c[3][1] + c[1][1]*c[2][0]*c[3][2] - c[1][0]*c[2][1]*c[3][2]);
+        m.c[3][1] = d * (c[0][1]*c[2][2]*c[3][0] - c[0][2]*c[2][1]*c[3][0] + c[0][2]*c[2][0]*c[3][1] - c[0][0]*c[2][2]*c[3][1] - c[0][1]*c[2][0]*c[3][2] + c[0][0]*c[2][1]*c[3][2]);
+        m.c[3][2] = d * (c[0][2]*c[1][1]*c[3][0] - c[0][1]*c[1][2]*c[3][0] - c[0][2]*c[1][0]*c[3][1] + c[0][0]*c[1][2]*c[3][1] + c[0][1]*c[1][0]*c[3][2] - c[0][0]*c[1][1]*c[3][2]);
+        m.c[3][3] = d * (c[0][1]*c[1][2]*c[2][0] - c[0][2]*c[1][1]*c[2][0] + c[0][2]*c[1][0]*c[2][1] - c[0][0]*c[1][2]*c[2][1] - c[0][1]*c[1][0]*c[2][2] + c[0][0]*c[1][1]*c[2][2]);
+
+        return m;
+    }
+
+    void decompose( Vec3f &trans, Vec3f &rot, Vec3f &scale ) const
+    {
+        // Getting translation is trivial
+        trans = Vec3f( c[3][0], c[3][1], c[3][2] );
+
+        // Scale is length of columns
+        scale.x = sqrtf( c[0][0] * c[0][0] + c[0][1] * c[0][1] + c[0][2] * c[0][2] );
+        scale.y = sqrtf( c[1][0] * c[1][0] + c[1][1] * c[1][1] + c[1][2] * c[1][2] );
+        scale.z = sqrtf( c[2][0] * c[2][0] + c[2][1] * c[2][1] + c[2][2] * c[2][2] );
+
+        if( scale.x == 0 || scale.y == 0 || scale.z == 0 ) return;
+
+        // Detect negative scale with determinant and flip one arbitrary axis
+        if( determinant() < 0 ) scale.x = -scale.x;
+
+        // Combined rotation matrix YXZ
+        //
+        // Cos[y]*Cos[z]+Sin[x]*Sin[y]*Sin[z]   Cos[z]*Sin[x]*Sin[y]-Cos[y]*Sin[z]  Cos[x]*Sin[y]    
+        // Cos[x]*Sin[z]                        Cos[x]*Cos[z]                       -Sin[x]
+        // -Cos[z]*Sin[y]+Cos[y]*Sin[x]*Sin[z]  Cos[y]*Cos[z]*Sin[x]+Sin[y]*Sin[z]  Cos[x]*Cos[y]
+
+        rot.x = asinf( -c[2][1] / scale.z );
+        
+        // Special case: Cos[x] == 0 (when Sin[x] is +/-1)
+        float f = fabsf( c[2][1] / scale.z );
+        if( f > 0.999f && f < 1.001f )
+        {
+            // Pin arbitrarily one of y or z to zero
+            // Mathematical equivalent of gimbal lock
+            rot.y = 0;
+            
+            // Now: Cos[x] = 0, Sin[x] = +/-1, Cos[y] = 1, Sin[y] = 0
+            // => m[0][0] = Cos[z] and m[1][0] = Sin[z]
+            rot.z = atan2f( -c[1][0] / scale.y, c[0][0] / scale.x );
+        }
+        // Standard case
+        else
+        {
+            rot.y = atan2f( c[2][0] / scale.z, c[2][2] / scale.z );
+            rot.z = atan2f( c[0][1] / scale.x, c[1][1] / scale.y );
+        }
+    }
+
+    void extractMatrix3x3f(float matrix33[ 3 ][ 3 ])
+    {
+        for (int32_t i = 0; i < 3; ++i)
+        {
+            for (int32_t j = 0; j < 3; ++j)
+            {
+                matrix33[ i ][ j ] = c[ i ][ j ];
+            }
+        }
+    }
+
+    void set(const float *floatArray16)
+    {
+        for (uint32_t i = 0; i < 4; ++i)
+        {
+            for (uint32_t j = 0; j < 4; ++j)
+            {
+                c[i][j] = floatArray16[i * 4 + j];
+            }
+        }
+    }
+
+    void setCol( uint32_t col, const Vec4f& v ) 
+    {
+        x[col * 4 + 0] = v.x;
+        x[col * 4 + 1] = v.y;
+        x[col * 4 + 2] = v.z;
+        x[col * 4 + 3] = v.w;
+    }
+
+    Vec4f getCol( uint32_t col ) const
+    {
+        return Vec4f( x[col * 4 + 0], x[col * 4 + 1], x[col * 4 + 2], x[col * 4 + 3] );
+    }
+
+    Vec4f getRow( uint32_t row ) const
+    {
+        return Vec4f( x[row + 0], x[row + 4], x[row + 8], x[row + 12] );
+    }
+
+    Vec3f getTrans() const
+    {
+        return Vec3f( c[3][0], c[3][1], c[3][2] );
+    }
+    
+    // Note: Scale length is length of columns
+    Vec3f getScaleLen() const
+    {
+        Vec3f scale;
+        scale.x = sqrtf( c[0][0] * c[0][0] + c[0][1] * c[0][1] + c[0][2] * c[0][2] );
+        scale.y = sqrtf( c[1][0] * c[1][0] + c[1][1] * c[1][1] + c[1][2] * c[1][2] );
+        scale.z = sqrtf( c[2][0] * c[2][0] + c[2][1] * c[2][1] + c[2][2] * c[2][2] );
+        return scale;
+    }
+
+    Vec3f getScale() const
+    {
+        return Vec3f(c[0][0], c[1][1], c[2][2]);
+    }
+
+    Vec3f getRot() const
+    {
+        Vec3f t, r, s;
+        decompose(t, r, s);
+        return r;
+    }
+
+    Quaternion getQuat() const
+    {
+      Vec3f t, r, s;
+      decompose(t, r, s);
+      Quaternion q(r.x, r.y, r.z);
+      return q;
+    }
+};
+
 /***
  * Matrix holds a 3x2 matrix for transforming coordinates. This allows mapping Point and vectors
  * with translation, scaling, skewing, and rotation. Together these types of transformations are
@@ -31,6 +1276,15 @@ namespace tgfx {
  */
 class Matrix {
  public:
+  static Matrix MakeAll(const Matrix4f& mat4) {
+    // tgfx::PrintError("Matrix MakeAll mat = ");
+    // for (auto i  = 0 ; i < 16; i++) {
+    //   tgfx::PrintError("x[%d] = %f ", i, mat4.x[i]);
+    // }
+    return Matrix::MakeAll(mat4.c[0][0], mat4.c[1][0], mat4.c[3][0], 
+                            mat4.c[0][1], mat4.c[1][1], mat4.c[3][1]);
+  }
+
   /**
    * Sets Matrix to scale by (sx, sy). Returned matrix is:
    *
