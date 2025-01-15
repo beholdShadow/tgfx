@@ -177,6 +177,17 @@ public:
         return *this;
     }
 
+    Vec3f operator/( const Vec3f &v ) const
+    {
+        return Vec3f( x / v.x, y / v.y, z / v.z );
+    }
+    Vec3f &operator/=( const Vec3f &v )
+    {
+        x /= v.x;
+        y /= v.y;
+        z /= v.z;
+        return *this;
+    }
     Vec3f operator/( const float f ) const
     {
         return Vec3f( x / f, y / f, z / f );
@@ -389,7 +400,7 @@ public:
       w = cr * cp * cy + sr * sp * sy;
       x = sr * cp * cy + cr * sp * sy;
       y = cr * sp * cy - sr * cp * sy;
-      z = cr * cp * sy - sr * sp * cy;// Order: y * x * z, y axis as main axis
+      z = cr * cp * sy - sr * sp * cy;// Order: y * x * z, z axis as main axis
     }
 
     // ---------------------
@@ -648,16 +659,7 @@ public:
         return Quaternion(degToRad(x), degToRad(y), degToRad(z));
     }
 
-    Vec3f toEulerAngles() const
-    {
-        float rx = atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
-        float ry = asin(2 * (w * y - z * x));
-        float rz = atan2(2 * (w * z + x * y), 1 - 2 * (z * z + y * y));
-        
-        return Vec3f(radToDeg(rx), radToDeg(ry), radToDeg(rz));
-    }
-
-	Vec3f toEulerAngles2() const
+	Vec3f toEulerAngles() const
 	{
 		float rx = asin(2 * (w * x - y * z));
 		float ry = atan2(2 * (w * y + x * z), 1 - 2 * (x * x + y * y));
@@ -697,9 +699,14 @@ public:
         return m;
     }
 
+    static Matrix4f RotMat(const Quaternion& q)
+    {
+        return Matrix4f(q);
+    }
+
     static Matrix4f RotMat( float x, float y, float z ) // x, y, z in radians
     {
-        // Rotation order: YXZ [* Vector]
+        // Rotation order: rotY * rotX * rotZ [* Vector], 以z轴作为第一主轴
         return Matrix4f( Quaternion( x, y, z ) );
     }
 
