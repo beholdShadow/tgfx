@@ -65,6 +65,11 @@ inline T Clamp(const T& t, const T& tLow, const T& tHigh)
     }
     return tHigh;
 }
+template<class T>
+inline T Mix(const T& t1, const T& t2, const float& ratio)
+{
+    return t1 * (1.0 - ratio) + t2 * ratio;
+}
 class Vec3f
 {
 public:
