@@ -20,8 +20,8 @@
 #include "core/GlyphRunList.h"
 
 namespace tgfx {
-Rect TextContent::getBounds() const {
-  return textBlob->getBounds();
+TextContent::TextContent(std::shared_ptr<TextBlob> textBlob, Color textColor)
+    : bounds(textBlob->getBounds()), textBlob(std::move(textBlob)), textColor(textColor) {
 }
 
 void TextContent::draw(Canvas* canvas, const Paint& paint) const {
@@ -41,7 +41,7 @@ bool TextContent::hitTestPoint(float localX, float localY, bool pixelHitTest) {
     }
 
     for (const auto& glyphRunList : *glyphRunLists) {
-      if (hitTestPointInternal(localX, localY, glyphRunList)) {
+      if (HitTestPointInternal(localX, localY, glyphRunList)) {
         return true;
       }
     }
@@ -49,32 +49,33 @@ bool TextContent::hitTestPoint(float localX, float localY, bool pixelHitTest) {
     return false;
   }
 
-  const Rect textBounds = textBlob->getBounds();
-  return textBounds.contains(localX, localY);
+  return bounds.contains(localX, localY);
 }
 
-bool TextContent::hitTestPointInternal(float localX, float localY,
+bool TextContent::HitTestPointInternal(float localX, float localY,
                                        const std::shared_ptr<GlyphRunList>& glyphRunList) {
   const auto& glyphRuns = glyphRunList->glyphRuns();
   for (const auto& glyphRun : glyphRuns) {
-    const auto& font = glyphRun.font;
+    const auto& glyphFace = glyphRun.glyphFace;
+    if (glyphFace == nullptr) {
+      continue;
+    }
     const auto& positions = glyphRun.positions;
     size_t index = 0;
-
     for (const auto& glyphID : glyphRun.glyphs) {
       const auto& position = positions[index];
-      if (font.hasColor()) {
-        auto bounds = font.getBounds(glyphID);
-        bounds.offset(position.x, position.y);
-        if (bounds.contains(localX, localY)) {
-          return true;
-        }
-      } else {
+      if (glyphFace->hasOutlines()) {
         Path glyphPath = {};
-        if (font.getPath(glyphID, &glyphPath)) {
+        if (glyphFace->getPath(glyphID, &glyphPath)) {
           if (glyphPath.contains(localX - position.x, localY - position.y)) {
             return true;
           }
+        }
+      } else {
+        auto bounds = glyphFace->getBounds(glyphID);
+        bounds.offset(position.x, position.y);
+        if (bounds.contains(localX, localY)) {
+          return true;
         }
       }
       index++;

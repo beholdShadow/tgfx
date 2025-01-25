@@ -29,6 +29,10 @@ ShapeRasterizer::ShapeRasterizer(int width, int height, std::shared_ptr<Shape> s
 
 std::shared_ptr<ShapeBuffer> ShapeRasterizer::makeRasterized(bool tryHardware) const {
   auto finalPath = shape->getPath();
+  if (finalPath.isEmpty() && finalPath.isInverseFillType()) {
+    finalPath.reset();
+    finalPath.addRect(Rect::MakeWH(width(), height()));
+  }
   if (PathTriangulator::ShouldTriangulatePath(finalPath)) {
     return ShapeBuffer::MakeFrom(makeTriangles(finalPath));
   }

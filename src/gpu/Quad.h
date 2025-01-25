@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "core/utils/Log.h"
+#include "tgfx/core/Data.h"
 #include "tgfx/core/Matrix.h"
 #include "tgfx/core/Rect.h"
 
@@ -27,15 +29,18 @@ class Quad {
   static Quad MakeFrom(const Rect& rect, const Matrix* matrix = nullptr);
 
   const Point& point(size_t i) const {
+    DEBUG_ASSERT(i < 4);
     return points[i];
   }
 
-  Rect bounds() const;
+  /**
+   * Returns the basic vertex data of the quad as triangle strips.
+   */
+  std::shared_ptr<Data> toTriangleStrips() const;
 
  private:
-  explicit Quad(std::vector<Point> points) : points(std::move(points)) {
-  }
+  explicit Quad(const Rect& rect, const Matrix* matrix = nullptr);
 
-  std::vector<Point> points;
+  Point points[4] = {};
 };
 }  // namespace tgfx

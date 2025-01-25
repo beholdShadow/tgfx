@@ -28,6 +28,10 @@ class BlendShader : public Shader {
   }
 
  protected:
+  Type type() const override {
+    return Type::Blend;
+  }
+
   std::unique_ptr<FragmentProcessor> asFragmentProcessor(const FPArgs& args,
                                                          const Matrix* uvMatrix) const override;
 

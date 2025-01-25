@@ -17,6 +17,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "tgfx/core/Typeface.h"
+#include <vector>
 #include "core/utils/UniqueID.h"
 #include "tgfx/core/UTF.h"
 
@@ -65,6 +66,11 @@ class EmptyTypeface : public Typeface {
 
   Type getType() const override { return Native;}
   
+ protected:
+  std::vector<Unichar> getGlyphToUnicodeMap() const override {
+    return {};
+  }
+
  private:
   uint32_t _uniqueID = UniqueID::Next();
 };
@@ -86,4 +92,9 @@ GlyphID Typeface::getGlyphID(const std::string& name) const {
   auto unichar = UTF::NextUTF8(&start, start + name.size());
   return getGlyphID(unichar);
 }
+
+std::vector<Unichar> Typeface::getGlyphToUnicodeMap() const {
+  return {};
+};
+
 }  // namespace tgfx

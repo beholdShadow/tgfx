@@ -28,6 +28,9 @@ class CustomShader : public Shader {
   }
   virtual void setCustomParams(const std::vector<ShaderVar>& params) override;
  protected:
+  virtual Type type() const override {
+    return Type::Image;
+  }
   std::unique_ptr<FragmentProcessor> asFragmentProcessor(const FPArgs& args,
                                                          const Matrix* uvMatrix) const override;
 

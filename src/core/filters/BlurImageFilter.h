@@ -24,14 +24,25 @@
 namespace tgfx {
 class BlurImageFilter : public ImageFilter {
  public:
-  BlurImageFilter(Point blurOffset, float downScaling, int iteration, TileMode tileMode);
+  BlurImageFilter(Point blurOffset, float downScaling, int iteration, TileMode tileMode,
+                  float scaleFactor);
+
+  Point blurOffset;
+  float downScaling;
+  int iteration;
+  TileMode tileMode;
+  float scaleFactor = 1.0f;
 
  protected:
+  Type type() const override {
+    return Type::Blur;
+  };
+
   Rect onFilterBounds(const Rect& srcRect) const override;
 
   std::shared_ptr<TextureProxy> lockTextureProxy(std::shared_ptr<Image> source,
-                                                 const Rect& clipBounds, const TPArgs& args,
-                                                 const SamplingOptions& sampling) const override;
+                                                 const Rect& clipBounds,
+                                                 const TPArgs& args) const override;
 
   std::unique_ptr<FragmentProcessor> asFragmentProcessor(std::shared_ptr<Image> source,
                                                          const FPArgs& args,
@@ -39,13 +50,7 @@ class BlurImageFilter : public ImageFilter {
                                                          const Matrix* uvMatrix) const override;
 
   void draw(std::shared_ptr<RenderTargetProxy> renderTarget,
-            std::unique_ptr<FragmentProcessor> imageProcessor, const Rect& imageBounds, bool isDown,
-            uint32_t renderFlags) const;
-
- private:
-  Point blurOffset;
-  float downScaling;
-  int iteration;
-  TileMode tileMode;
+            std::unique_ptr<FragmentProcessor> imageProcessor, const Size& imageSize,
+            const Matrix& blurUVMatrix, bool isDown, uint32_t renderFlags) const;
 };
 }  // namespace tgfx

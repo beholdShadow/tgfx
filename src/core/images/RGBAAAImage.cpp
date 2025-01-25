@@ -17,6 +17,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "RGBAAAImage.h"
+#include "core/utils/AddressOf.h"
 #include "core/utils/Log.h"
 #include "core/utils/NeedMipmaps.h"
 #include "gpu/TPArgs.h"
@@ -63,11 +64,11 @@ std::unique_ptr<FragmentProcessor> RGBAAAImage::asFragmentProcessor(const FPArgs
   auto mipmapped = source->hasMipmaps() && NeedMipmaps(sampling, args.viewMatrix, uvMatrix);
   if (bounds.contains(drawBounds)) {
     TPArgs tpArgs(args.context, args.renderFlags, mipmapped);
-    auto proxy = source->lockTextureProxy(tpArgs, sampling);
+    auto proxy = source->lockTextureProxy(tpArgs);
     return TextureEffect::MakeRGBAAA(std::move(proxy), alphaStart, sampling, AddressOf(matrix));
   }
   TPArgs tpArgs(args.context, args.renderFlags, mipmapped);
-  auto textureProxy = lockTextureProxy(tpArgs, sampling);
+  auto textureProxy = lockTextureProxy(tpArgs);
   if (textureProxy == nullptr) {
     return nullptr;
   }

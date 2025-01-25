@@ -24,7 +24,21 @@
 
 namespace tgfx {
 class ImageShader : public Shader {
+ public:
+  std::shared_ptr<Image> image = nullptr;
+  TileMode tileModeX = TileMode::Clamp;
+  TileMode tileModeY = TileMode::Clamp;
+  SamplingOptions sampling = {};
+
+  bool isAImage() const override {
+    return true;
+  }
+
  protected:
+  Type type() const override {
+    return Type::Image;
+  }
+
   std::unique_ptr<FragmentProcessor> asFragmentProcessor(const FPArgs& args,
                                                          const Matrix* uvMatrix) const override;
 
@@ -33,11 +47,6 @@ class ImageShader : public Shader {
               const SamplingOptions& sampling)
       : image(std::move(image)), tileModeX(tileModeX), tileModeY(tileModeY), sampling(sampling) {
   }
-
-  std::shared_ptr<Image> image = nullptr;
-  TileMode tileModeX = TileMode::Clamp;
-  TileMode tileModeY = TileMode::Clamp;
-  SamplingOptions sampling = {};
 
   friend class Shader;
 };

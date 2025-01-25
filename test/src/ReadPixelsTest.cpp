@@ -165,9 +165,8 @@ TGFX_TEST(ReadPixelsTest, Surface) {
   bitmap.unlockPixels();
   EXPECT_TRUE(result);
 
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
   ASSERT_TRUE(context != nullptr);
   auto image = Image::MakeFrom(bitmap);
   ASSERT_TRUE(image != nullptr);
@@ -255,15 +254,14 @@ TGFX_TEST(ReadPixelsTest, Surface) {
   CHECK_PIXELS(RGBARectInfo, pixels, "Surface_BL_rgb_A_to_rgb_A_100_-100");
   auto gl = GLFunctions::Get(context);
   gl->deleteTextures(1, &textureInfo.id);
-  device->unlock();
   bitmap.unlockPixels();
 }
 
 TGFX_TEST(ReadPixelsTest, PngCodec) {
-  auto rgbaCodec = MakeImageCodec("resources/apitest/test_timestretch.png");
+  auto rgbaCodec = MakeImageCodec("resources/apitest/imageReplacement.png");
   ASSERT_TRUE(rgbaCodec != nullptr);
-  EXPECT_EQ(rgbaCodec->width(), 1280);
-  EXPECT_EQ(rgbaCodec->height(), 720);
+  EXPECT_EQ(rgbaCodec->width(), 110);
+  EXPECT_EQ(rgbaCodec->height(), 110);
   EXPECT_EQ(rgbaCodec->orientation(), Orientation::TopLeft);
   auto rowBytes = static_cast<size_t>(rgbaCodec->width()) * 4;
   Buffer buffer(rowBytes * static_cast<size_t>(rgbaCodec->height()));
@@ -272,12 +270,16 @@ TGFX_TEST(ReadPixelsTest, PngCodec) {
   auto RGBAInfo = ImageInfo::Make(rgbaCodec->width(), rgbaCodec->height(), ColorType::RGBA_8888,
                                   AlphaType::Premultiplied);
   EXPECT_TRUE(rgbaCodec->readPixels(RGBAInfo, pixels));
+  // set each pixel's alpha to 255
+  for (size_t i = 3; i < rowBytes * static_cast<size_t>(rgbaCodec->height()); i += 4) {
+    static_cast<uint8_t*>(pixels)[i] = 255;
+  }
   CHECK_PIXELS(RGBAInfo, pixels, "PngCodec_Decode_RGBA");
   auto bytes = ImageCodec::Encode(Pixmap(RGBAInfo, pixels), EncodedFormat::PNG, 100);
   auto codec = ImageCodec::MakeFrom(bytes);
   ASSERT_TRUE(codec != nullptr);
-  EXPECT_EQ(codec->width(), 1280);
-  EXPECT_EQ(codec->height(), 720);
+  EXPECT_EQ(codec->width(), 110);
+  EXPECT_EQ(codec->height(), 110);
   EXPECT_EQ(codec->orientation(), Orientation::TopLeft);
   buffer.clear();
   EXPECT_TRUE(codec->readPixels(RGBAInfo, pixels));
@@ -380,10 +382,10 @@ TGFX_TEST(ReadPixelsTest, WebpCodec) {
 }
 
 TGFX_TEST(ReadPixelsTest, JpegCodec) {
-  auto rgbaCodec = MakeImageCodec("resources/apitest/rotation.jpg");
+  auto rgbaCodec = MakeImageCodec("resources/apitest/imageReplacement.jpg");
   ASSERT_TRUE(rgbaCodec != nullptr);
-  EXPECT_EQ(rgbaCodec->width(), 4032);
-  EXPECT_EQ(rgbaCodec->height(), 3024);
+  EXPECT_EQ(rgbaCodec->width(), 110);
+  EXPECT_EQ(rgbaCodec->height(), 110);
   EXPECT_EQ(rgbaCodec->orientation(), Orientation::RightTop);
   auto RGBAInfo = ImageInfo::Make(rgbaCodec->width(), rgbaCodec->height(), ColorType::RGBA_8888,
                                   AlphaType::Premultiplied);
@@ -395,8 +397,8 @@ TGFX_TEST(ReadPixelsTest, JpegCodec) {
   auto bytes = ImageCodec::Encode(Pixmap(RGBAInfo, pixels), EncodedFormat::JPEG, 20);
   auto codec = ImageCodec::MakeFrom(bytes);
   ASSERT_TRUE(codec != nullptr);
-  EXPECT_EQ(codec->width(), 4032);
-  EXPECT_EQ(codec->height(), 3024);
+  EXPECT_EQ(codec->width(), 110);
+  EXPECT_EQ(codec->height(), 110);
   EXPECT_EQ(codec->orientation(), Orientation::TopLeft);
   buffer.clear();
   EXPECT_TRUE(codec->readPixels(RGBAInfo, pixels));
@@ -437,10 +439,10 @@ TGFX_TEST(ReadPixelsTest, JpegCodec) {
 }
 
 TGFX_TEST(ReadPixelsTest, NativeCodec) {
-  auto rgbaCodec = MakeNativeCodec("resources/apitest/test_timestretch.png");
+  auto rgbaCodec = MakeNativeCodec("resources/apitest/imageReplacement.png");
   ASSERT_TRUE(rgbaCodec != nullptr);
-  EXPECT_EQ(rgbaCodec->width(), 1280);
-  EXPECT_EQ(rgbaCodec->height(), 720);
+  EXPECT_EQ(rgbaCodec->width(), 110);
+  EXPECT_EQ(rgbaCodec->height(), 110);
   EXPECT_EQ(rgbaCodec->orientation(), Orientation::TopLeft);
   auto RGBAInfo = ImageInfo::Make(rgbaCodec->width(), rgbaCodec->height(), ColorType::RGBA_8888,
                                   AlphaType::Premultiplied);
@@ -452,8 +454,8 @@ TGFX_TEST(ReadPixelsTest, NativeCodec) {
   auto bytes = ImageCodec::Encode(Pixmap(RGBAInfo, pixels), EncodedFormat::PNG, 100);
   auto codec = ImageCodec::MakeNativeCodec(bytes);
   ASSERT_TRUE(codec != nullptr);
-  ASSERT_EQ(codec->width(), 1280);
-  ASSERT_EQ(codec->height(), 720);
+  ASSERT_EQ(codec->width(), 110);
+  ASSERT_EQ(codec->height(), 110);
   ASSERT_EQ(codec->orientation(), Orientation::TopLeft);
   buffer.clear();
   EXPECT_TRUE(codec->readPixels(RGBAInfo, pixels));

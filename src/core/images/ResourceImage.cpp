@@ -25,15 +25,19 @@ namespace tgfx {
 ResourceImage::ResourceImage(UniqueKey uniqueKey) : uniqueKey(std::move(uniqueKey)) {
 }
 
-std::shared_ptr<TextureProxy> ResourceImage::lockTextureProxy(const TPArgs& args,
-                                                              const SamplingOptions&) const {
-  if (args.context == nullptr) {
-    return nullptr;
+std::shared_ptr<Image> ResourceImage::makeRasterized(float rasterizationScale,
+                                                     const SamplingOptions& sampling) const {
+  if (rasterizationScale == 1.0f) {
+    return weakThis.lock();
   }
-  // The passed-in TPArgs and sampling options are ignored because all resource images are already
-  // rasterized and have a preset mipmap state.
-  TPArgs tpArgs(args.context, args.renderFlags, hasMipmaps(), uniqueKey);
-  return onLockTextureProxy(tpArgs);
+  return Image::makeRasterized(rasterizationScale, sampling);
+}
+
+std::shared_ptr<TextureProxy> ResourceImage::lockTextureProxy(const TPArgs& args) const {
+  auto newArgs = args;
+  // ResourceImage has preset mipmaps.
+  newArgs.mipmapped = hasMipmaps();
+  return onLockTextureProxy(newArgs, uniqueKey);
 }
 
 std::shared_ptr<Image> ResourceImage::onMakeMipmapped(bool enabled) const {
@@ -41,15 +45,11 @@ std::shared_ptr<Image> ResourceImage::onMakeMipmapped(bool enabled) const {
   return enabled ? MipmapImage::MakeFrom(std::move(source)) : source;
 }
 
-std::shared_ptr<Image> ResourceImage::makeRasterized(bool, const SamplingOptions&) const {
-  return weakThis.lock();
-}
-
 std::unique_ptr<FragmentProcessor> ResourceImage::asFragmentProcessor(
     const FPArgs& args, TileMode tileModeX, TileMode tileModeY, const SamplingOptions& sampling,
     const Matrix* uvMatrix) const {
-  TPArgs tpArgs(args.context, args.renderFlags, hasMipmaps(), uniqueKey);
-  auto proxy = onLockTextureProxy(tpArgs);
+  TPArgs tpArgs(args.context, args.renderFlags, hasMipmaps());
+  auto proxy = onLockTextureProxy(tpArgs, uniqueKey);
   return TiledTextureEffect::Make(std::move(proxy), tileModeX, tileModeY, sampling, uvMatrix,
                                   isAlphaOnly());
 }

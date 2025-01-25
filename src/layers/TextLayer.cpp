@@ -17,6 +17,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "tgfx/layers/TextLayer.h"
+#include "core/FontGlyphFace.h"
 #include "core/utils/Log.h"
 #include "layers/contents/TextContent.h"
 #include "tgfx/core/UTF.h"
@@ -168,6 +169,7 @@ std::unique_ptr<LayerContent> TextLayer::onUpdateContent() {
   if (nullptr == textBlob) {
     return nullptr;
   }
+
   return std::make_unique<TextContent>(std::move(textBlob), _textColor);
 }
 

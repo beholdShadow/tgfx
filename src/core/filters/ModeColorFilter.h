@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include "tgfx/core/BlendMode.h"
 #include "tgfx/core/ColorFilter.h"
 
 namespace tgfx {
@@ -28,10 +29,17 @@ class ModeColorFilter : public ColorFilter {
 
   bool isAlphaUnchanged() const override;
 
- private:
+  bool asColorMode(Color* color, BlendMode* mode) const override;
+
   Color color;
   BlendMode mode;
 
+ protected:
+  Type type() const override {
+    return Type::Blend;
+  };
+
+ private:
   std::unique_ptr<FragmentProcessor> asFragmentProcessor() const override;
 };
 }  // namespace tgfx

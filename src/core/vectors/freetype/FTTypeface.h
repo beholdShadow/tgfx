@@ -57,6 +57,10 @@ class FTTypeface : public Typeface {
   Type getType() const override {
     return FreeType;
   }
+ protected:
+#ifdef TGFX_USE_GLYPH_TO_UNICODE
+  std::vector<Unichar> getGlyphToUnicodeMap() const override;
+#endif
 
  private:
   uint32_t _uniqueID = 0;

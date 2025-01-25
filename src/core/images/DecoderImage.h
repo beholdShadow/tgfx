@@ -43,7 +43,12 @@ class DecoderImage : public ResourceImage {
   }
 
  protected:
-  std::shared_ptr<TextureProxy> onLockTextureProxy(const TPArgs& args) const override;
+  Type type() const override {
+    return Type::Decoder;
+  }
+
+  std::shared_ptr<TextureProxy> onLockTextureProxy(const TPArgs& args,
+                                                   const UniqueKey& key) const override;
 
  private:
   std::shared_ptr<ImageDecoder> decoder = nullptr;

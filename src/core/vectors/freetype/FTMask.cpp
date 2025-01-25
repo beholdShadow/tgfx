@@ -104,50 +104,31 @@ void FTMask::onFillPath(const Path& path, const Matrix& matrix, bool,
   totalMatrix.postScale(1, -1);
   totalMatrix.postTranslate(0, static_cast<float>(pixelRef->height()));
   finalPath.transform(totalMatrix);
+  if (finalPath.isInverseFillType()) {
+    Path maskPath = {};
+    maskPath.addRect(Rect::MakeWH(info.width(), info.height()));
+    finalPath.addPath(maskPath, PathOp::Intersect);
+  }
   auto bounds = finalPath.getBounds();
   bounds.roundOut();
   markContentDirty(bounds, true);
   FTPath ftPath = {};
   finalPath.decompose(Iterator, &ftPath);
-  ftPath.setFillType(path.getFillType());
+  auto fillType = finalPath.getFillType();
+  ftPath.setEvenOdd(fillType == PathFillType::EvenOdd || fillType == PathFillType::InverseEvenOdd);
   auto outlines = ftPath.getOutlines();
   auto ftLibrary = FTLibrary::Get();
-  // if (!needsGammaCorrection) {
-    FT_Bitmap bitmap;
-    bitmap.width = static_cast<unsigned>(info.width());
-    bitmap.rows = static_cast<unsigned>(info.height());
-    bitmap.pitch = static_cast<int>(info.rowBytes());
-    bitmap.buffer = static_cast<unsigned char*>(pixels);
-    bitmap.pixel_mode = FT_PIXEL_MODE_GRAY;
-    bitmap.num_grays = 256;
-    for (auto& outline : outlines) {
-      FT_Outline_Get_Bitmap(ftLibrary, &(outline->outline), &bitmap);
-    }
-    pixelRef->unlockPixels();
-    return;
-  // }
-  // auto buffer = static_cast<unsigned char*>(pixels);
-  // int rows = info.height();
-  // int pitch = static_cast<int>(info.rowBytes());
-  // RasterTarget target = {};
-  // target.origin = buffer + (rows - 1) * pitch;
-  // target.pitch = pitch;
-  // target.gammaTable = PixelRefMask::GammaTable().data();
-  // FT_Raster_Params params;
-  // params.flags = FT_RASTER_FLAG_DIRECT | FT_RASTER_FLAG_CLIP;
-  // if (antiAlias) {
-  //   params.flags |= FT_RASTER_FLAG_AA;
-  // }
-  // params.gray_spans = SpanFunc;
-  // params.user = &target;
-  // auto& clip = params.clip_box;
-  // clip.xMin = 0;
-  // clip.yMin = 0;
-  // clip.xMax = (FT_Pos)info.width();
-  // clip.yMax = (FT_Pos)info.height();
-  // for (auto& outline : outlines) {
-  //   FT_Outline_Render(ftLibrary, &(outline->outline), &params);
-  // }
-  // pixelRef->unlockPixels();
+  FT_Bitmap bitmap;
+  bitmap.width = static_cast<unsigned>(info.width());
+  bitmap.rows = static_cast<unsigned>(info.height());
+  bitmap.pitch = static_cast<int>(info.rowBytes());
+  bitmap.buffer = static_cast<unsigned char*>(pixels);
+  bitmap.pixel_mode = FT_PIXEL_MODE_GRAY;
+  bitmap.num_grays = 256;
+  for (auto& outline : outlines) {
+    FT_Outline_Get_Bitmap(ftLibrary, &(outline->outline), &bitmap);
+  }
+  pixelRef->unlockPixels();
+  return;
 }
 }  // namespace tgfx

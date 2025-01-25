@@ -41,12 +41,20 @@ class MipmapImage : public ResourceImage {
     return true;
   }
 
+  std::shared_ptr<Image> makeRasterized(float rasterizationScale = 1.0f,
+                                        const SamplingOptions& sampling = {}) const override;
+
  protected:
+  Type type() const override {
+    return Type::Mipmap;
+  }
+
   std::shared_ptr<Image> onMakeDecoded(Context* context, bool tryHardware) const override;
 
   std::shared_ptr<Image> onMakeMipmapped(bool enabled) const override;
 
-  std::shared_ptr<TextureProxy> onLockTextureProxy(const TPArgs& args) const override;
+  std::shared_ptr<TextureProxy> onLockTextureProxy(const TPArgs& args,
+                                                   const UniqueKey& key) const override;
 
  private:
   std::shared_ptr<ResourceImage> source = nullptr;

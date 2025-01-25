@@ -49,6 +49,7 @@ cmake-build-*
 node_modules
 Build/
 test/out/
+test/baseline-out/
 DerivedData/
 xcuserdata
 xcshareddata
@@ -62,14 +63,13 @@ Adobe After Effects Auto-Save/
 /.sync_deps.cmake
 /build.yml
 .vs
-win/Win32Demo/x64
-win/x64
 win/build
-win/libtgfx
 win/Debug/
 win/Release/
-win/Win32Demo/Debug/
-win/Win32Demo/Release/
+win/Debug-x64/
+win/Release-x64/
+win/Debug-x86/
+win/Release-x86/
 QTCMAKE.cfg
 test/baseline/.cache
 /result

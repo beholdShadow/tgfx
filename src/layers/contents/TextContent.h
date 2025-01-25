@@ -23,21 +23,22 @@
 namespace tgfx {
 class TextContent : public LayerContent {
  public:
-  TextContent(std::shared_ptr<TextBlob> textBlob, Color textColor)
-      : textBlob(std::move(textBlob)), textColor(textColor) {
-  }
+  TextContent(std::shared_ptr<TextBlob> textBlob, Color textColor);
 
-  Rect getBounds() const override;
+  Rect getBounds() const override {
+    return bounds;
+  }
 
   void draw(Canvas* canvas, const Paint& paint) const override;
 
   bool hitTestPoint(float localX, float localY, bool pixelHitTest) override;
 
  private:
+  Rect bounds = Rect::MakeEmpty();
   std::shared_ptr<TextBlob> textBlob = nullptr;
   Color textColor = Color::White();
 
-  bool hitTestPointInternal(float localX, float localY,
-                            const std::shared_ptr<GlyphRunList>& glyphRunList);
+  static bool HitTestPointInternal(float localX, float localY,
+                                   const std::shared_ptr<GlyphRunList>& glyphRunList);
 };
 }  // namespace tgfx

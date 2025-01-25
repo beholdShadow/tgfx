@@ -18,10 +18,10 @@
 
 #include "FilterImage.h"
 #include "SubsetImage.h"
+#include "core/utils/AddressOf.h"
 #include "core/utils/NeedMipmaps.h"
 #include "gpu/OpContext.h"
 #include "gpu/processors/TiledTextureEffect.h"
-#include "gpu/proxies/RenderTargetProxy.h"
 
 namespace tgfx {
 std::shared_ptr<Image> FilterImage::MakeFrom(std::shared_ptr<Image> source,
@@ -108,11 +108,10 @@ std::shared_ptr<Image> FilterImage::onMakeWithFilter(std::shared_ptr<ImageFilter
   return FilterImage::Wrap(source, filterBounds, std::move(composeFilter));
 }
 
-std::shared_ptr<TextureProxy> FilterImage::lockTextureProxy(const TPArgs& args,
-                                                            const SamplingOptions& sampling) const {
+std::shared_ptr<TextureProxy> FilterImage::lockTextureProxy(const TPArgs& args) const {
   auto inputBounds = Rect::MakeWH(source->width(), source->height());
   auto filterBounds = filter->filterBounds(inputBounds);
-  return filter->lockTextureProxy(source, filterBounds, args, sampling);
+  return filter->lockTextureProxy(source, filterBounds, args);
 }
 
 std::unique_ptr<FragmentProcessor> FilterImage::asFragmentProcessor(const FPArgs& args,
@@ -140,7 +139,7 @@ std::unique_ptr<FragmentProcessor> FilterImage::asFragmentProcessor(const FPArgs
   auto mipmapped =
       source->hasMipmaps() && NeedMipmaps(sampling, args.viewMatrix, AddressOf(fpMatrix));
   TPArgs tpArgs(args.context, args.renderFlags, mipmapped);
-  auto textureProxy = filter->lockTextureProxy(source, dstBounds, tpArgs, sampling);
+  auto textureProxy = filter->lockTextureProxy(source, dstBounds, tpArgs);
   if (textureProxy == nullptr) {
     return nullptr;
   }

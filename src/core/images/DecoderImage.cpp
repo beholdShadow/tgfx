@@ -36,8 +36,9 @@ DecoderImage::DecoderImage(UniqueKey uniqueKey, std::shared_ptr<ImageDecoder> de
     : ResourceImage(std::move(uniqueKey)), decoder(std::move(decoder)) {
 }
 
-std::shared_ptr<TextureProxy> DecoderImage::onLockTextureProxy(const TPArgs& args) const {
-  return args.context->proxyProvider()->createTextureProxy(args.uniqueKey, decoder, args.mipmapped,
+std::shared_ptr<TextureProxy> DecoderImage::onLockTextureProxy(const TPArgs& args,
+                                                               const UniqueKey& key) const {
+  return args.context->proxyProvider()->createTextureProxy(key, decoder, args.mipmapped,
                                                            args.renderFlags);
 }
 }  // namespace tgfx

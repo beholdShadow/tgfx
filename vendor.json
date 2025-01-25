@@ -25,6 +25,17 @@
       }
     },
     {
+      "name": "tracy",
+      "cmake": {
+        "targets": [
+          "TracyClient"
+        ],
+        "arguments": [
+          "-DCMAKE_CXX_FLAGS=\"-w\""
+        ]
+      }
+    },
+    {
       "name": "zlib",
       "cmake": {
         "targets": [
@@ -192,6 +203,7 @@
         "arguments": [
           "-DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE",
           "-DCMAKE_DISABLE_FIND_PACKAGE_HarfBuzz=TRUE",
+          "-DFT_DISABLE_BROTLI=TRUE",
           "-DCMAKE_C_FLAGS=\"-w\""
         ]
       }
@@ -231,6 +243,7 @@
           "expat"
         ],
         "arguments": [
+          "-DBUILD_SHARED_LIBS=OFF",
           "-DCMAKE_C_FLAGS=\"-w\""
         ]
       }

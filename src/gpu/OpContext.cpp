@@ -21,12 +21,9 @@
 #include "gpu/ops/RectDrawOp.h"
 
 namespace tgfx {
-static constexpr uint32_t InvalidContentVersion = 0;
-
 void OpContext::fillWithFP(std::unique_ptr<FragmentProcessor> fp, const Matrix& uvMatrix,
                            bool autoResolve) {
-  fillRectWithFP(Rect::MakeWH(renderTargetProxy->width(), renderTargetProxy->height()),
-                 std::move(fp), uvMatrix, autoResolve);
+  fillRectWithFP(bounds(), std::move(fp), uvMatrix, autoResolve);
 }
 
 void OpContext::fillRectWithFP(const Rect& dstRect, std::unique_ptr<FragmentProcessor> fp,
@@ -34,24 +31,28 @@ void OpContext::fillRectWithFP(const Rect& dstRect, std::unique_ptr<FragmentProc
   if (fp == nullptr) {
     return;
   }
-  auto op = RectDrawOp::Make(std::nullopt, dstRect, Matrix::I(), &uvMatrix);
+  auto op = RectDrawOp::Make(std::nullopt, dstRect, Matrix::I(), uvMatrix);
   op->addColorFP(std::move(fp));
   op->setBlendMode(BlendMode::Src);
   addOp(std::move(op));
   if (autoResolve) {
-    auto drawingManager = renderTargetProxy->getContext()->drawingManager();
-    drawingManager->addTextureResolveTask(renderTargetProxy);
+    auto drawingManager = renderTarget->getContext()->drawingManager();
+    drawingManager->addTextureResolveTask(renderTarget);
   }
 }
 
 void OpContext::addOp(std::unique_ptr<Op> op) {
   if (opsTask == nullptr || opsTask->isClosed()) {
-    auto drawingManager = renderTargetProxy->getContext()->drawingManager();
-    opsTask = drawingManager->addOpsTask(renderTargetProxy, renderFlags);
+    auto drawingManager = renderTarget->getContext()->drawingManager();
+    opsTask = drawingManager->addOpsTask(renderTarget, renderFlags);
   }
   opsTask->addOp(std::move(op));
-  do {
-    _contentVersion++;
-  } while (InvalidContentVersion == _contentVersion);
 }
+
+void OpContext::replaceRenderTarget(std::shared_ptr<RenderTargetProxy> newRenderTarget) {
+  DEBUG_ASSERT(newRenderTarget != nullptr);
+  opsTask = nullptr;
+  renderTarget = std::move(newRenderTarget);
+}
+
 }  // namespace tgfx

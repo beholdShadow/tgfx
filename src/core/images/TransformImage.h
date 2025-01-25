@@ -40,9 +40,9 @@ class TransformImage : public Image {
     return source->isAlphaOnly();
   }
 
- protected:
   std::shared_ptr<Image> source = nullptr;
 
+ protected:
   std::shared_ptr<Image> onMakeDecoded(Context* context, bool tryHardware) const override;
 
   std::shared_ptr<Image> onMakeMipmapped(bool enabled) const override;

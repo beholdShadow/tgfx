@@ -23,6 +23,7 @@
 #include "gpu/TPArgs.h"
 #include "gpu/processors/FragmentProcessor.h"
 #include "gpu/processors/TextureEffect.h"
+#include "gpu/processors/TiledTextureEffect.h"
 #include "gpu/proxies/RenderTargetProxy.h"
 
 namespace tgfx {
@@ -38,8 +39,7 @@ Rect ImageFilter::onFilterBounds(const Rect& srcRect) const {
 
 std::shared_ptr<TextureProxy> ImageFilter::lockTextureProxy(std::shared_ptr<Image> source,
                                                             const Rect& clipBounds,
-                                                            const TPArgs& args,
-                                                            const SamplingOptions& sampling) const {
+                                                            const TPArgs& args) const {
   auto renderTarget = RenderTargetProxy::MakeFallback(
       args.context, static_cast<int>(clipBounds.width()), static_cast<int>(clipBounds.height()),
       source->isAlphaOnly(), 1, args.mipmapped);
@@ -49,7 +49,8 @@ std::shared_ptr<TextureProxy> ImageFilter::lockTextureProxy(std::shared_ptr<Imag
   auto drawRect = Rect::MakeWH(renderTarget->width(), renderTarget->height());
   FPArgs fpArgs(args.context, args.renderFlags, drawRect, Matrix::I());
   auto offsetMatrix = Matrix::MakeTrans(clipBounds.x(), clipBounds.y());
-  auto processor = asFragmentProcessor(std::move(source), fpArgs, sampling, &offsetMatrix);
+  // There is no scaling for the source image, so we can use the default sampling options.
+  auto processor = asFragmentProcessor(std::move(source), fpArgs, {}, &offsetMatrix);
   if (!processor) {
     return nullptr;
   }
@@ -84,7 +85,7 @@ std::unique_ptr<FragmentProcessor> ImageFilter::makeFPFromTextureProxy(
   auto isAlphaOnly = source->isAlphaOnly();
   auto mipmapped = source->hasMipmaps() && NeedMipmaps(sampling, args.viewMatrix, uvMatrix);
   TPArgs tpArgs(args.context, args.renderFlags, mipmapped);
-  auto textureProxy = lockTextureProxy(std::move(source), dstBounds, tpArgs, sampling);
+  auto textureProxy = lockTextureProxy(std::move(source), dstBounds, tpArgs);
   if (textureProxy == nullptr) {
     return nullptr;
   }
@@ -92,6 +93,11 @@ std::unique_ptr<FragmentProcessor> ImageFilter::makeFPFromTextureProxy(
   if (uvMatrix != nullptr) {
     fpMatrix.preConcat(*uvMatrix);
   }
-  return TextureEffect::Make(std::move(textureProxy), sampling, &fpMatrix, isAlphaOnly);
+  if (dstBounds.contains(clipBounds)) {
+    return TextureEffect::Make(std::move(textureProxy), sampling, &fpMatrix, isAlphaOnly);
+  } else {
+    return TiledTextureEffect::Make(std::move(textureProxy), TileMode::Decal, TileMode::Decal,
+                                    sampling, &fpMatrix, isAlphaOnly);
+  }
 }
 }  // namespace tgfx

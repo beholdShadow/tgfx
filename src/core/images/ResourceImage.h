@@ -31,11 +31,7 @@ class ResourceImage : public Image {
  public:
   explicit ResourceImage(UniqueKey uniqueKey);
 
-  bool isComplex() const override {
-    return false;
-  }
-
-  std::shared_ptr<Image> makeRasterized(bool mipmapped = false,
+  std::shared_ptr<Image> makeRasterized(float rasterizationScale = 1.0f,
                                         const SamplingOptions& sampling = {}) const override;
 
  protected:
@@ -43,10 +39,10 @@ class ResourceImage : public Image {
 
   std::shared_ptr<Image> onMakeMipmapped(bool enabled) const override;
 
-  std::shared_ptr<TextureProxy> lockTextureProxy(
-      const TPArgs& args, const SamplingOptions& sampling) const override final;
+  std::shared_ptr<TextureProxy> lockTextureProxy(const TPArgs& args) const override final;
 
-  virtual std::shared_ptr<TextureProxy> onLockTextureProxy(const TPArgs& args) const = 0;
+  virtual std::shared_ptr<TextureProxy> onLockTextureProxy(const TPArgs& args,
+                                                           const UniqueKey& key) const = 0;
 
   std::unique_ptr<FragmentProcessor> asFragmentProcessor(const FPArgs& args, TileMode tileModeX,
                                                          TileMode tileModeY,

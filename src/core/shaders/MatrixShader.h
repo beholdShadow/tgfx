@@ -30,6 +30,10 @@ class MatrixShader final : public Shader {
     return source->isOpaque();
   }
 
+  bool isAImage() const override {
+    return source->isAImage();
+  }
+
   bool asColor(Color* color) const override {
     return source->asColor(color);
   }
@@ -37,6 +41,10 @@ class MatrixShader final : public Shader {
   std::shared_ptr<Shader> makeWithMatrix(const Matrix& viewMatrix) const override;
 
  protected:
+  Type type() const override {
+    return Type::Matrix;
+  }
+
   std::unique_ptr<FragmentProcessor> asFragmentProcessor(const FPArgs& args,
                                                          const Matrix* uvMatrix) const override;
 

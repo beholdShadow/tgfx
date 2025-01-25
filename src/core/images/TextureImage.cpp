@@ -50,15 +50,15 @@ BackendTexture TextureImage::getBackendTexture(Context* context, ImageOrigin* or
   return texture->getBackendTexture();
 }
 
-std::shared_ptr<Image> TextureImage::makeTextureImage(Context* context,
-                                                      const SamplingOptions&) const {
+std::shared_ptr<Image> TextureImage::makeTextureImage(Context* context) const {
   if (context == nullptr || context->uniqueID() != contextID) {
     return nullptr;
   }
   return std::static_pointer_cast<Image>(weakThis.lock());
 }
 
-std::shared_ptr<TextureProxy> TextureImage::onLockTextureProxy(const TPArgs& args) const {
+std::shared_ptr<TextureProxy> TextureImage::onLockTextureProxy(const TPArgs& args,
+                                                               const UniqueKey&) const {
   if (args.context == nullptr || args.context->uniqueID() != contextID) {
     return nullptr;
   }

@@ -23,6 +23,7 @@
 #include "tgfx/layers/DisplayList.h"
 #include "tgfx/layers/Gradient.h"
 #include "tgfx/layers/ImageLayer.h"
+#include "tgfx/layers/ImagePattern.h"
 #include "tgfx/layers/Layer.h"
 #include "tgfx/layers/ShapeLayer.h"
 #include "tgfx/layers/SolidLayer.h"
@@ -32,6 +33,9 @@
 #include "tgfx/layers/filters/ColorMatrixFilter.h"
 #include "tgfx/layers/filters/DropShadowFilter.h"
 #include "tgfx/layers/filters/InnerShadowFilter.h"
+#include "tgfx/layers/layerstyles/BackgroundBlurStyle.h"
+#include "tgfx/layers/layerstyles/DropShadowStyle.h"
+#include "tgfx/layers/layerstyles/InnerShadowStyle.h"
 #include "utils/TestUtils.h"
 #include "utils/common.h"
 
@@ -180,9 +184,8 @@ TGFX_TEST(LayerTest, LayerTreeCircle) {
 }
 
 TGFX_TEST(LayerTest, textLayer) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
   auto surface = Surface::Make(context, 200, 100);
   auto displayList = std::make_unique<DisplayList>();
   auto layer = Layer::Make();
@@ -215,14 +218,13 @@ TGFX_TEST(LayerTest, textLayer) {
   emojiLayer->setMatrix(Matrix::MakeTrans(0, 20));
   displayList->render(surface.get());
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/draw_text"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, imageLayer) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
-  auto image = MakeImage("resources/apitest/image_as_mask.png");
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
+  auto image = MakeImage("resources/apitest/cmyk.jpg");
   auto surface = Surface::Make(context, image->width() * 5, image->height() * 5);
   auto displayList = std::make_unique<DisplayList>();
   auto layer = Layer::Make();
@@ -235,7 +237,6 @@ TGFX_TEST(LayerTest, imageLayer) {
   imageLayer->setMatrix(Matrix::MakeScale(5.0f));
   displayList->render(surface.get());
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/imageLayer"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, Layer_getTotalMatrix) {
@@ -424,48 +425,72 @@ TGFX_TEST(LayerTest, getbounds) {
   EXPECT_FLOAT_EQ(bounds.right, 86.194153f);
   EXPECT_FLOAT_EQ(bounds.bottom, 80.515099f);
 
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
   auto rootBounds = root->getBounds();
   auto width = static_cast<int>(rootBounds.width());
   auto height = static_cast<int>(rootBounds.height());
   auto surface = Surface::Make(context, width, height);
   displayList->render(surface.get());
-  context->submit();
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/getBounds"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, shapeLayer) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
   auto surface = Surface::Make(context, 200, 300);
   auto displayList = std::make_unique<DisplayList>();
   auto layer = Layer::Make();
   displayList->root()->addChild(layer);
   for (int i = 0; i < 3; i++) {
-    auto shaperLayer = ShapeLayer::Make();
+    auto shapeLayer = ShapeLayer::Make();
     auto rect = Rect::MakeXYWH(10, 10 + 100 * i, 140, 80);
     Path path = {};
     path.addRect(rect);
-    shaperLayer->setPath(path);
-    auto filleStyle = Gradient::MakeLinear({rect.left, rect.top}, {rect.right, rect.bottom});
-    filleStyle->setColors({{0.f, 0.f, 1.f, 1.f}, {0.f, 1.f, 0.f, 1.f}});
-    shaperLayer->setFillStyle(filleStyle);
+    shapeLayer->setPath(path);
+    shapeLayer->removeFillStyles();
+    std::shared_ptr<ShapeStyle> fillStyle = nullptr;
+    switch (i) {
+      case 0:
+        fillStyle = Gradient::MakeLinear({rect.left, rect.top}, {rect.right, rect.top},
+                                         {{0.f, 0.f, 1.f, 1.f}, {0.f, 1.f, 0.f, 1.f}});
+        break;
+      case 1:
+        fillStyle = Gradient::MakeRadial({rect.centerX(), rect.centerY()}, rect.width() / 2.0f,
+                                         {{0.f, 0.f, 1.f, 1.f}, {0.f, 1.f, 0.f, 1.f}});
+        break;
+      case 2:
+        fillStyle = ImagePattern::Make(MakeImage("resources/apitest/imageReplacement.png"),
+                                       TileMode::Repeat, TileMode::Mirror);
+        std::static_pointer_cast<ImagePattern>(fillStyle)->setMatrix(
+            Matrix::MakeTrans(-25, rect.top - 70));
+        break;
+      default:
+        break;
+    }
+    fillStyle->setAlpha(0.8f);
+    shapeLayer->addFillStyle(fillStyle);
+
     // stroke style
-    shaperLayer->setLineWidth(10.0f);
-    shaperLayer->setLineCap(LineCap::Butt);
-    shaperLayer->setLineJoin(LineJoin::Miter);
+    shapeLayer->setLineWidth(10.0f);
+    shapeLayer->setLineCap(LineCap::Butt);
+    shapeLayer->setLineJoin(LineJoin::Miter);
     auto strokeStyle = SolidColor::Make(Color::Red());
-    shaperLayer->setStrokeStyle(strokeStyle);
-    std::vector<float> dashPattern = {10.0f, 10.0f};
-    shaperLayer->setLineDashPattern(dashPattern);
-    shaperLayer->setLineDashPhase(5.0f);
-    shaperLayer->setStrokeAlign(static_cast<StrokeAlign>(i));
-    layer->addChild(shaperLayer);
-    auto shapeLayerRect = shaperLayer->getBounds();
+    shapeLayer->setStrokeStyle(strokeStyle);
+    strokeStyle = SolidColor::Make(Color::Green());
+    strokeStyle->setAlpha(0.5f);
+    strokeStyle->setBlendMode(BlendMode::Lighten);
+    shapeLayer->addStrokeStyle(strokeStyle);
+    if (i != 2) {
+      std::vector<float> dashPattern = {10.0f, 10.0f};
+      shapeLayer->setLineDashPattern(dashPattern);
+      shapeLayer->setLineDashPhase(5.0f);
+    }
+    shapeLayer->setStrokeAlign(static_cast<StrokeAlign>(i));
+    layer->addChild(shapeLayer);
+    auto shapeLayerRect = shapeLayer->getBounds();
     switch (i) {
       case 0:
         EXPECT_EQ(shapeLayerRect, Rect::MakeLTRB(5, 5, 155, 95));
@@ -481,15 +506,13 @@ TGFX_TEST(LayerTest, shapeLayer) {
     }
   }
   displayList->render(surface.get());
-  context->submit();
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/draw_shape"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, solidLayer) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
   auto surface = Surface::Make(context, 200, 100);
   auto displayList = std::make_unique<DisplayList>();
   auto layer = Layer::Make();
@@ -506,9 +529,45 @@ TGFX_TEST(LayerTest, solidLayer) {
   EXPECT_TRUE(solidLayerRect == bounds);
 
   displayList->render(surface.get());
-  context->submit();
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/draw_solid"));
-  device->unlock();
+}
+
+TGFX_TEST(LayerTest, StrokeOnTop) {
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
+  auto surface = Surface::Make(context, 200, 200);
+  auto displayList = std::make_unique<DisplayList>();
+  auto layer = Layer::Make();
+  displayList->root()->addChild(layer);
+  auto shapeLayer = ShapeLayer::Make();
+  Path path = {};
+  path.addRect(Rect::MakeXYWH(20, 20, 150, 150));
+  shapeLayer->setPath(path);
+  shapeLayer->setFillStyle(SolidColor::Make(Color::Red()));
+  auto strokeColor = SolidColor::Make(Color::Green());
+  strokeColor->setAlpha(0.5f);
+  shapeLayer->setStrokeStyle(strokeColor);
+  shapeLayer->setLineWidth(16);
+  auto innerShadow = InnerShadowStyle::Make(30, 30, 0, 0, Color::FromRGBA(100, 0, 0, 128));
+  auto dropShadow = DropShadowStyle::Make(-20, -20, 0, 0, Color::Black());
+  dropShadow->setShowBehindLayer(false);
+  shapeLayer->setLayerStyles({dropShadow, innerShadow});
+  shapeLayer->setExcludeChildEffectsInLayerStyle(true);
+  layer->addChild(shapeLayer);
+  auto solidLayer = SolidLayer::Make();
+  solidLayer->setWidth(100);
+  solidLayer->setHeight(100);
+  solidLayer->setRadiusX(25);
+  solidLayer->setRadiusY(25);
+  solidLayer->setMatrix(Matrix::MakeTrans(75, 75));
+  solidLayer->setColor(Color::Blue());
+  shapeLayer->addChild(solidLayer);
+  displayList->render(surface.get());
+  EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/StrokeOnTop_Off"));
+  shapeLayer->setStrokeOnTop(true);
+  displayList->render(surface.get());
+  EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/StrokeOnTop_On"));
 }
 
 TGFX_TEST(LayerTest, FilterTest) {
@@ -516,8 +575,9 @@ TGFX_TEST(LayerTest, FilterTest) {
   auto filter2 = DropShadowFilter::Make(-40, -40, 0, 0, Color::Green());
   auto filter3 = BlurFilter::Make(40, 40);
   auto image = MakeImage("resources/apitest/rotation.jpg");
-  auto device = DevicePool::Make();
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
   auto surface = Surface::Make(context, image->width(), image->height());
   auto displayList = std::make_unique<DisplayList>();
   auto layer = ImageLayer::Make();
@@ -531,15 +591,15 @@ TGFX_TEST(LayerTest, FilterTest) {
   auto bounds = displayList->root()->getBounds();
   EXPECT_EQ(Rect::MakeLTRB(126.5f, 126.5f, 1725.5f, 2229.5f), bounds);
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/filterTest"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, filterClip) {
   auto filter = DropShadowFilter::Make(-10, -10, 0, 0, Color::Black());
 
   auto image = MakeImage("resources/apitest/rotation.jpg");
-  auto device = DevicePool::Make();
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
   auto surface = Surface::Make(context, 200, 200);
   auto displayList = std::make_unique<DisplayList>();
   auto layer = ImageLayer::Make();
@@ -553,13 +613,11 @@ TGFX_TEST(LayerTest, filterClip) {
   auto bounds = displayList->root()->getBounds();
   EXPECT_EQ(Rect::MakeLTRB(45.f, 45.f, 1562.f, 2066.f), bounds);
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/filterClip"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, dropshadowLayerFilter) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
   ASSERT_TRUE(context != nullptr);
   auto image = MakeImage("resources/apitest/image_as_mask.png");
   ASSERT_TRUE(image != nullptr);
@@ -601,7 +659,6 @@ TGFX_TEST(LayerTest, dropshadowLayerFilter) {
   displayList->render(surface.get());
 
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/dropShadow"));
-  device->unlock();
 
   auto src = Rect::MakeXYWH(10, 10, 10, 10);
   auto bounds = filter4->getImageFilter(1.0f)->filterBounds(src);
@@ -611,9 +668,9 @@ TGFX_TEST(LayerTest, dropshadowLayerFilter) {
 }
 
 TGFX_TEST(LayerTest, colorBlendLayerFilter) {
-
-  auto device = DevicePool::Make();
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
   auto image = MakeImage("resources/apitest/rotation.jpg");
   ASSERT_TRUE(image != nullptr);
   auto surface = Surface::Make(context, image->width() / 4, image->height() / 4);
@@ -628,14 +685,11 @@ TGFX_TEST(LayerTest, colorBlendLayerFilter) {
   layer->setMatrix(Matrix::MakeScale(0.25f));
   displayList->render(surface.get());
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/ModeColorFilter"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, colorMatrixLayerFilter) {
-
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
   ASSERT_TRUE(context != nullptr);
   auto image = MakeImage("resources/apitest/test_timestretch.png");
   ASSERT_TRUE(image != nullptr);
@@ -658,7 +712,6 @@ TGFX_TEST(LayerTest, colorMatrixLayerFilter) {
   filter->setMatrix(greyColorMatrix);
   displayList->render(surface.get());
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/greyColorMatrix"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, blurLayerFilter) {
@@ -680,14 +733,13 @@ TGFX_TEST(LayerTest, blurLayerFilter) {
 }
 
 TGFX_TEST(LayerTest, PassthroughAndNormal) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
   ASSERT_TRUE(context != nullptr);
 
   auto surface = Surface::Make(context, 800, 400);
 
-  surface->getCanvas()->clearRect(Rect::MakeWH(800, 400), Color::FromRGBA(53, 53, 53));
+  surface->getCanvas()->clear(Color::FromRGBA(53, 53, 53));
   DisplayList displayList;
 
   auto root = ShapeLayer::Make();
@@ -713,13 +765,12 @@ TGFX_TEST(LayerTest, PassthroughAndNormal) {
   root->setShouldRasterize(false);
   displayList.render(surface.get(), false);
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/PassThoughAndNormal"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, imageMask) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
   auto image = MakeImage("resources/apitest/rotation.jpg");
   auto surface = Surface::Make(context, image->width(), static_cast<int>(image->height() * 1.5));
   auto displayList = std::make_unique<DisplayList>();
@@ -854,13 +905,12 @@ TGFX_TEST(LayerTest, imageMask) {
 
   displayList->render(surface.get());
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/imageMask"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, shapeMask) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
   auto image = MakeImage("resources/apitest/rotation.jpg");
   auto surface = Surface::Make(context, image->width(), image->height());
   auto displayList = std::make_unique<DisplayList>();
@@ -879,8 +929,8 @@ TGFX_TEST(LayerTest, shapeMask) {
 
   auto shaperLayer = ShapeLayer::Make();
   shaperLayer->setPath(path);
-  auto radialFilleStyle = Gradient::MakeRadial({500, 500}, 500);
-  radialFilleStyle->setColors({{1.f, 0.f, 0.f, 1.f}, {0.f, 1.f, 0.f, 1.f}});
+  auto radialFilleStyle =
+      Gradient::MakeRadial({500, 500}, 500, {{1.f, 0.f, 0.f, 1.f}, {0.f, 1.f, 0.f, 1.f}});
   shaperLayer->setFillStyle(radialFilleStyle);
   shaperLayer->setAlpha(0.5f);
   layer->addChild(shaperLayer);
@@ -952,13 +1002,12 @@ TGFX_TEST(LayerTest, shapeMask) {
 
   displayList->render(surface.get());
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/shapeMask"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, textMask) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
   auto image = MakeImage("resources/apitest/rotation.jpg");
   auto surface = Surface::Make(context, image->width(), image->height());
   auto displayList = std::make_unique<DisplayList>();
@@ -1062,13 +1111,11 @@ TGFX_TEST(LayerTest, textMask) {
 
   displayList->render(surface.get());
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/textMask"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, ContentVersion) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
   ASSERT_TRUE(context != nullptr);
 
   auto surface = Surface::Make(context, 100, 100);
@@ -1101,7 +1148,6 @@ TGFX_TEST(LayerTest, ContentVersion) {
   EXPECT_NE(surface2->contentVersion(), 1u);
   displayList.render(surface.get());
   EXPECT_NE(surface->contentVersion(), contentVersion);
-  device->unlock();
 }
 
 /**
@@ -1110,9 +1156,9 @@ TGFX_TEST(LayerTest, ContentVersion) {
  * https://codesign-1252678369.cos.ap-guangzhou.myqcloud.com/getLayersUnderPoint.png
  */
 TGFX_TEST(LayerTest, getLayersUnderPoint) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
   auto surface = Surface::Make(context, 800, 800);
   auto canvas = surface->getCanvas();
   auto displayList = std::make_unique<DisplayList>();
@@ -1340,10 +1386,7 @@ TGFX_TEST(LayerTest, getLayersUnderPoint) {
   printf("\n");
   EXPECT_EQ(static_cast<int>(layers.size()), 2);
   EXPECT_EQ(layerNameJoin, "shaper_layer2|root_layer|");
-
-  context->submit();
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/getLayersUnderPoint"));
-  device->unlock();
 }
 
 /**
@@ -1353,9 +1396,9 @@ TGFX_TEST(LayerTest, getLayersUnderPoint) {
  * https://codesign-1252678369.cos.ap-guangzhou.myqcloud.com/Layer_hitTestPoint.png
  */
 TGFX_TEST(LayerTest, hitTestPoint) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
   auto surface = Surface::Make(context, 800, 800);
   auto canvas = surface->getCanvas();
   auto displayList = std::make_unique<DisplayList>();
@@ -1506,10 +1549,7 @@ TGFX_TEST(LayerTest, hitTestPoint) {
   EXPECT_EQ(false, shaperLayer1->hitTestPoint(q5.x, q5.y, true));
   EXPECT_EQ(true, shaperLayer2->hitTestPoint(q5.x, q5.y));
   EXPECT_EQ(true, shaperLayer2->hitTestPoint(q5.x, q5.y, true));
-
-  context->submit();
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/Layer_hitTestPoint"));
-  device->unlock();
 }
 
 /**
@@ -1518,9 +1558,9 @@ TGFX_TEST(LayerTest, hitTestPoint) {
  * https://codesign-1252678369.cos.ap-guangzhou.myqcloud.com/hitTestPointNested.png
  */
 TGFX_TEST(LayerTest, hitTestPointNested) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
   auto surface = Surface::Make(context, 800, 800);
   auto canvas = surface->getCanvas();
   auto displayList = std::make_unique<DisplayList>();
@@ -1679,16 +1719,12 @@ TGFX_TEST(LayerTest, hitTestPointNested) {
   EXPECT_EQ(false, grandsonLayer->hitTestPoint(p3.x, p3.y, true));
   EXPECT_EQ(true, rootLayer->hitTestPoint(p3.x, p3.y));
   EXPECT_EQ(true, rootLayer->hitTestPoint(p3.x, p3.y, true));
-
-  context->submit();
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/Layer_hitTestPointNested"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, InnerShadowFilter) {
-  auto device = DevicePool::Make();
-  ASSERT_TRUE(device != nullptr);
-  auto context = device->lockContext();
+  ContextScope scope;
+  auto context = scope.getContext();
   ASSERT_TRUE(context != nullptr);
   auto image = MakeImage("resources/apitest/imageReplacement.png");
   ASSERT_TRUE(image != nullptr);
@@ -1730,15 +1766,13 @@ TGFX_TEST(LayerTest, InnerShadowFilter) {
   displayList->render(surface.get());
 
   EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/innerShadow"));
-  device->unlock();
 }
 
 TGFX_TEST(LayerTest, DirtyFlag) {
-  auto device = DevicePool::Make();
+  ContextScope scope;
+  auto context = scope.getContext();
+  ASSERT_TRUE(context != nullptr);
   auto displayList = std::make_unique<DisplayList>();
-
-  EXPECT_TRUE(device != nullptr);
-  auto context = device->lockContext();
   auto surface = Surface::Make(context, 100, 100);
   auto child = ImageLayer::Make();
   auto image = MakeImage("resources/apitest/imageReplacement.png");
@@ -1773,7 +1807,185 @@ TGFX_TEST(LayerTest, DirtyFlag) {
   EXPECT_TRUE(!grandChild->bitFields.childrenDirty && !grandChild->bitFields.contentDirty);
   EXPECT_TRUE(!child->bitFields.childrenDirty && !child->bitFields.contentDirty);
   EXPECT_TRUE(root->bitFields.childrenDirty && !root->bitFields.contentDirty);
+}
 
-  device->unlock();
+TGFX_TEST(LayerTest, DropShadowStyle) {
+  ContextScope scope;
+  auto context = scope.getContext();
+  EXPECT_TRUE(context != nullptr);
+  auto surface = Surface::Make(context, 150, 150);
+  auto displayList = std::make_unique<DisplayList>();
+  auto back = SolidLayer::Make();
+  back->setColor(Color::White());
+  back->setWidth(150);
+  back->setHeight(150);
+  auto layer = ShapeLayer::Make();
+  layer->setMatrix(Matrix::MakeTrans(30, 30));
+  Path path;
+  path.addRect(Rect::MakeWH(100, 100));
+  layer->setPath(path);
+  auto fillStyle = SolidColor::Make(Color::FromRGBA(100, 0, 0, 128));
+  layer->setFillStyle(fillStyle);
+  layer->setBlendMode(BlendMode::Lighten);
+
+  auto shadowLayer = Layer::Make();
+  auto style = DropShadowStyle::Make(10, 10, 0, 0, Color::Black(), false);
+  shadowLayer->setLayerStyles({style});
+  shadowLayer->addChild(layer);
+  shadowLayer->setExcludeChildEffectsInLayerStyle(true);
+  back->addChild(shadowLayer);
+  displayList->root()->addChild(back);
+  displayList->render(surface.get());
+  EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/DropShadowStyle"));
+
+  style->setBlendMode(BlendMode::Luminosity);
+  style->setOffsetX(0);
+  style->setOffsetY(-20);
+  style->setShowBehindLayer(true);
+  shadowLayer->setAlpha(0.5);
+  displayList->render(surface.get());
+  EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/DropShadowStyle2"));
+
+  layer->setBlendMode(BlendMode::Multiply);
+  layer->setFillStyle(nullptr);
+  layer->setStrokeStyle(SolidColor::Make(Color::FromRGBA(100, 0, 0, 128)));
+  displayList->render(surface.get());
+  EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/DropShadowStyle-stroke-behindLayer"));
+
+  style->setShowBehindLayer(false);
+  displayList->render(surface.get());
+  EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/DropShadowStyle-stroke"));
+
+  auto blur = BlurFilter::Make(10, 10);
+  layer->setFilters({blur});
+  displayList->render(surface.get());
+  EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/DropShadowStyle-stroke-blur"));
+
+  style->setShowBehindLayer(true);
+  displayList->render(surface.get());
+  EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/DropShadowStyle-stroke-blur-behindLayer"));
+}
+
+TGFX_TEST(LayerTest, InnerShadowStyle) {
+  ContextScope scope;
+  auto context = scope.getContext();
+  EXPECT_TRUE(context != nullptr);
+  auto surface = Surface::Make(context, 150, 150);
+  auto displayList = std::make_unique<DisplayList>();
+  auto layer = ShapeLayer::Make();
+  layer->setMatrix(Matrix::MakeTrans(30, 30));
+  Path path;
+  path.addRect(Rect::MakeWH(100, 100));
+  Path path2;
+  path2.addRect(Rect::MakeWH(50, 50));
+  path2.transform(Matrix::MakeTrans(20, 20));
+  path.addPath(path2, PathOp::Difference);
+  layer->setPath(path);
+  auto fillStyle = SolidColor::Make(Color::FromRGBA(100, 0, 0, 128));
+  layer->setFillStyle(fillStyle);
+  auto style = InnerShadowStyle::Make(10, 10, 0, 0, Color::Black());
+  layer->setLayerStyles({style});
+  displayList->root()->addChild(layer);
+  displayList->render(surface.get());
+  EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/InnerShadowStyle"));
+}
+
+TGFX_TEST(LayerTest, Filters) {
+  ContextScope scope;
+  auto context = scope.getContext();
+  EXPECT_TRUE(context != nullptr);
+  auto surface = Surface::Make(context, 150, 150);
+  auto displayList = std::make_unique<DisplayList>();
+  auto layer = ShapeLayer::Make();
+  layer->setMatrix(Matrix::MakeTrans(30, 30));
+  Path path;
+  path.addRect(Rect::MakeWH(100, 100));
+  layer->setPath(path);
+  auto fillStyle = SolidColor::Make(Color::FromRGBA(100, 0, 0, 128));
+  layer->setFillStyle(fillStyle);
+  auto filter = BlurFilter::Make(10, 10);
+  auto filter2 = DropShadowFilter::Make(10, 10, 0, 0, Color::Black());
+  auto filter3 = InnerShadowFilter::Make(10, 10, 0, 0, Color::White());
+  layer->setFilters({filter, filter2, filter3});
+  displayList->root()->addChild(layer);
+  displayList->render(surface.get());
+  EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/filters"));
+}
+
+TGFX_TEST(LayerTest, MaskOnwer) {
+  auto layer = Layer::Make();
+  auto mask = Layer::Make();
+  layer->setMask(mask);
+  EXPECT_EQ(layer->mask(), mask);
+  EXPECT_EQ(mask->maskOwner, layer.get());
+  layer->setMask(nullptr);
+  EXPECT_EQ(layer->mask(), nullptr);
+  EXPECT_EQ(mask->maskOwner, nullptr);
+}
+
+TGFX_TEST(LayerTest, BackgroundBlur) {
+  ContextScope scope;
+  auto context = scope.getContext();
+  EXPECT_TRUE(context != nullptr);
+  auto surface = Surface::Make(context, 150, 150);
+  auto displayList = std::make_unique<DisplayList>();
+  auto solidLayer = SolidLayer::Make();
+  solidLayer->setColor(Color::Blue());
+  solidLayer->setWidth(150);
+  solidLayer->setHeight(150);
+  displayList->root()->addChild(solidLayer);
+
+  auto background = ImageLayer::Make();
+  background->setImage(MakeImage("resources/apitest/imageReplacement.png"));
+  displayList->root()->addChild(background);
+
+  auto layer = ShapeLayer::Make();
+  layer->setMatrix(Matrix::MakeTrans(30, 30));
+  Path path;
+  path.addRect(Rect::MakeWH(100, 100));
+  layer->setPath(path);
+  auto strokeStyle = SolidColor::Make(Color::FromRGBA(100, 0, 0, 100));
+  layer->setStrokeStyle(strokeStyle);
+  layer->setLineWidth(10);
+  layer->setStrokeOnTop(true);
+  layer->setExcludeChildEffectsInLayerStyle(true);
+  auto filter = BackgroundBlurStyle::Make(10, 10);
+  auto dropShadow = DropShadowStyle::Make(10, 10, 0, 0, Color::FromRGBA(0, 0, 0, 100));
+  dropShadow->setShowBehindLayer(true);
+  layer->setExcludeChildEffectsInLayerStyle(true);
+  layer->setLayerStyles({dropShadow, filter});
+
+  auto blurFilter = BlurFilter::Make(1, 20);
+  layer->setFilters({blurFilter});
+
+  auto silbing = ShapeLayer::Make();
+  Path rect;
+  rect.addRect(Rect::MakeWH(50, 50));
+  silbing->setPath(rect);
+  silbing->setMatrix(Matrix::MakeTrans(-10, 0));
+  auto newBackgroundBlur = BackgroundBlurStyle::Make(15, 15);
+  silbing->setLayerStyles({dropShadow, newBackgroundBlur});
+  silbing->setFillStyle(SolidColor::Make(Color::FromRGBA(0, 0, 100, 100)));
+  layer->addChild(silbing);
+
+  auto clipLayer = Layer::Make();
+  clipLayer->setMatrix(Matrix::MakeTrans(2, 40));
+  clipLayer->setScrollRect(Rect::MakeXYWH(10, 10, 20, 20));
+  layer->addChild(clipLayer);
+
+  auto child = ShapeLayer::Make();
+
+  child->setPath(rect);
+  child->setMatrix(Matrix::MakeScale(0.5, 0.5));
+  auto fillStyle2 = SolidColor::Make(Color::FromRGBA(0, 100, 0, 100));
+  child->setFillStyle(fillStyle2);
+  auto backgroundBlur = BackgroundBlurStyle::Make(20, 20);
+  child->setLayerStyles({backgroundBlur});
+  child->setBlendMode(BlendMode::Multiply);
+  clipLayer->addChild(child);
+
+  displayList->root()->addChild(layer);
+  displayList->render(surface.get());
+  EXPECT_TRUE(Baseline::Compare(surface, "LayerTest/backgroundLayerBlur"));
 }
 }  // namespace tgfx

@@ -19,8 +19,8 @@
 #include "SimpleLayerTree.h"
 #include "tgfx/layers/Gradient.h"
 #include "tgfx/layers/ImageLayer.h"
-#include "tgfx/layers/ImagePattern.h"
 #include "tgfx/layers/ShapeLayer.h"
+#include "tgfx/layers/SolidColor.h"
 #include "tgfx/layers/TextLayer.h"
 #include "tgfx/layers/filters/DropShadowFilter.h"
 
@@ -29,7 +29,7 @@ namespace drawers {
 static std::shared_ptr<tgfx::Layer> CreateProgressBar() {
   auto progressBar = tgfx::Layer::Make();
   progressBar->setMatrix(tgfx::Matrix::MakeTrans(24, 670));
-  progressBar->setBlendMode(tgfx::BlendMode::PlusDarker);
+  progressBar->setBlendMode(tgfx::BlendMode::PlusLighter);
   auto backLineLayer = tgfx::ShapeLayer::Make();
   auto backLinePath = tgfx::Path();
   backLinePath.lineTo(327, 0);
@@ -67,8 +67,9 @@ static std::shared_ptr<tgfx::Layer> CreateBackground() {
   background->setPath(backPath);
 
   auto backgroundGradient = tgfx::ShapeLayer::Make();
-  auto gradient = tgfx::Gradient::MakeLinear({0, 0}, {0, 430});
-  gradient->setColors({tgfx::Color::FromRGBA(233, 0, 100), tgfx::Color::FromRGBA(134, 93, 255, 0)});
+  auto gradient = tgfx::Gradient::MakeLinear(
+      {0, 0}, {0, 430},
+      {tgfx::Color::FromRGBA(233, 0, 100), tgfx::Color::FromRGBA(134, 93, 255, 0)});
   auto gradientPath = tgfx::Path();
   gradientPath.addRect(tgfx::Rect::MakeXYWH(0, 0, 375, 430));
   gradientPath.addPath(backPath, tgfx::PathOp::Intersect);
@@ -90,6 +91,7 @@ static std::shared_ptr<tgfx::Layer> CreateImageLayer(const AppHost* host) {
   imageLayer->setImage(image);
   auto imageScale = static_cast<float>(std::min(327.0 / image->width(), 344.0 / image->height()));
   auto maskLayer = tgfx::ShapeLayer::Make();
+  maskLayer->setFillStyle(tgfx::SolidColor::Make());
   auto maskPath = tgfx::Path();
   auto radius = 20.f / imageScale;
   maskPath.addRoundRect(tgfx::Rect::MakeWH(image->width(), image->height()), radius, radius);
@@ -121,21 +123,8 @@ std::shared_ptr<tgfx::Layer> SimpleLayerTree::buildLayerTree(const AppHost* host
   root->addChild(textLayer);
 
   // progress shape
-  progressBar = CreateProgressBar();
+  auto progressBar = CreateProgressBar();
   root->addChild(progressBar);
   return root;
 }
-
-void SimpleLayerTree::prepare(const AppHost*) {
-  changeMode();
-}
-
-void SimpleLayerTree::changeMode() {
-  if (progressBar->blendMode() == tgfx::BlendMode::PlusDarker) {
-    progressBar->setBlendMode(tgfx::BlendMode::PlusLighter);
-  } else {
-    progressBar->setBlendMode(tgfx::BlendMode::PlusDarker);
-  }
-}
-
 }  // namespace drawers

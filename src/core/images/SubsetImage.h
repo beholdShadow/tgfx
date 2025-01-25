@@ -20,7 +20,6 @@
 
 #include <optional>
 #include "core/images/TransformImage.h"
-#include "core/utils/AddressOf.h"
 #include "gpu/processors/FragmentProcessor.h"
 
 namespace tgfx {
@@ -39,12 +38,12 @@ class SubsetImage : public TransformImage {
     return static_cast<int>(bounds.height());
   }
 
-  bool isComplex() const override {
-    return true;
-  }
+  Rect bounds = Rect::MakeEmpty();
 
  protected:
-  Rect bounds = Rect::MakeEmpty();
+  Type type() const override {
+    return Type::Subset;
+  }
 
   std::shared_ptr<Image> onCloneWith(std::shared_ptr<Image> newSource) const override;
 
