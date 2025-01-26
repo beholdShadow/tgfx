@@ -116,10 +116,11 @@ class RRectPaint {
 };
 
 void WriteColor(float* vertices, int& index, const Color& color) {
-  vertices[index++] = color.red;
-  vertices[index++] = color.green;
-  vertices[index++] = color.blue;
-  vertices[index++] = color.alpha;
+  auto byteVertics = reinterpret_cast<uint8_t*>(&vertices[index++]);
+  byteVertics[0] = static_cast<uint8_t>(color.red * 255.0);
+  byteVertics[1] = static_cast<uint8_t>(color.green * 255.0);
+  byteVertics[2] = static_cast<uint8_t>(color.blue * 255.0);
+  byteVertics[3] = static_cast<uint8_t>(color.alpha * 255.0);
 }
 
 class RRectVerticesProvider : public DataProvider {

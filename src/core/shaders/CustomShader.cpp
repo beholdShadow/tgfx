@@ -20,20 +20,20 @@
 #include "gpu/processors/CustomEffectProcessor.h"
 
 namespace tgfx {
-std::shared_ptr<Shader> Shader::MakeCustomShader(const std::string& fragShader, std::vector<ShaderVar> params) {
-  auto shader = std::make_shared<CustomShader>(fragShader, std::move(params));
+std::shared_ptr<Shader> Shader::MakeCustomShader(const ShaderConfig& config) {
+  auto shader = std::make_shared<CustomShader>(config);
   shader->weakThis = shader;
   return shader;
 }
 
-void CustomShader::setCustomParams(const std::vector<ShaderVar>& params) {
-  this->params = params;
+void CustomShader::setCustomVars(const std::vector<ShaderVar>& vars) {
+  this->config.uniforms = vars;
   return;
 }
 
 std::unique_ptr<FragmentProcessor> CustomShader::asFragmentProcessor(const FPArgs&,
                                                                     const Matrix*) const {
-  return CustomEffectProcessor::Make(this->id, this->fragShader, this->params);
+  return CustomEffectProcessor::Make(this->config);
 }
 
 }  // namespace tgfx

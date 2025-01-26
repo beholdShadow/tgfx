@@ -31,16 +31,23 @@
 namespace tgfx {
 class FragmentProcessor;
 
+struct ShaderConfig {
+  std::string funcImpl;
+  std::string funcName;
+  std::vector<ShaderVar> uniforms;
+};
 /**
  * Shaders specify the source color(s) for what is being drawn. If a paint has no shader, then the
  * paint's color is used. If the paint has a shader, then the shader's color(s) are used instead,
  * but they are modulated by the paint's alpha. Shaders are in
  */
 class Shader {
- public:
-  static std::shared_ptr<Shader> MakeCustomShader(const std::string& fragShader, std::vector<ShaderVar> params);
-
-  virtual void setCustomParams(const std::vector<ShaderVar>& params);
+ public: 
+  /**
+   * Creates a custom shader by using ShaderConfig.
+   */
+  static std::shared_ptr<Shader> MakeCustomShader(const ShaderConfig& config);
+  virtual void setCustomVars(const std::vector<ShaderVar>& params);
   
   /**
    * Creates a shader that draws the specified color.
@@ -148,7 +155,7 @@ class Shader {
   std::shared_ptr<Shader> makeWithColorFilter(std::shared_ptr<ColorFilter> colorFilter) const;
 
  protected:
-  enum class Type { Color, ColorFilter, Image, Blend, Matrix, Gradient };
+  enum class Type { Color, ColorFilter, Image, Blend, Matrix, Gradient, Custom };
 
   /**
    * Returns the type of this shader.

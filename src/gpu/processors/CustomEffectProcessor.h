@@ -18,13 +18,15 @@
 
 #pragma once
 
+#include <sstream>
+#include <iomanip>
 #include "gpu/processors/FragmentProcessor.h"
 #include "tgfx/core/Color.h"
-
+#include "tgfx/core/Shader.h"
 namespace tgfx {
 class CustomEffectProcessor : public FragmentProcessor {
  public:
-  static std::unique_ptr<CustomEffectProcessor> Make(uint32_t id, const std::string& fragShader, const std::vector<ShaderVar>& params);
+  static std::unique_ptr<CustomEffectProcessor> Make(const ShaderConfig& config);
 
   std::string name() const override {
     return "CustomEffectProcessor";
@@ -40,14 +42,18 @@ class CustomEffectProcessor : public FragmentProcessor {
  protected:
   DEFINE_PROCESSOR_CLASS_ID
 
-  CustomEffectProcessor(uint32_t id,  const std::string& fragShader, const std::vector<ShaderVar>& params)
-      : FragmentProcessor(ClassID()), id(id), fragShader(fragShader), params(params) {
+  CustomEffectProcessor(const ShaderConfig& config)
+      : FragmentProcessor(ClassID()), config(config) {
+    std::hash<std::string> hash_fn;
+    size_t hash_value = hash_fn(config.funcImpl);
+    std::stringstream ss;
+    ss << std::setw(8) << std::setfill('0') << std::hex << hash_value;  // 格式化为 8 字符的十六进制
+    hash = ss.str();
   }
 
   bool onIsEqual(const FragmentProcessor& processor) const override;
 
-  uint32_t id;
-  std::string fragShader;
-  std::vector<ShaderVar> params;
+  ShaderConfig config;
+  std::string hash;
 };
 }  // namespace tgfx

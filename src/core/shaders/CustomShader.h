@@ -23,20 +23,17 @@
 namespace tgfx {
 class CustomShader : public Shader {
  public:
-  explicit CustomShader(std::string fragShader, std::vector<ShaderVar> params):fragShader(fragShader), params(std::move(params)) {
-    id = UniqueID::Next();
+  explicit CustomShader(const ShaderConfig& config):config(config) {
   }
-  virtual void setCustomParams(const std::vector<ShaderVar>& params) override;
+  virtual void setCustomVars(const std::vector<ShaderVar>& vars) override;
  protected:
   virtual Type type() const override {
-    return Type::Image;
+    return Type::Custom;
   }
   std::unique_ptr<FragmentProcessor> asFragmentProcessor(const FPArgs& args,
                                                          const Matrix* uvMatrix) const override;
 
  private:
-  uint32_t id;
-  std::string fragShader;
-  std::vector<ShaderVar> params;
+  ShaderConfig config;
 };
 }  // namespace tgfx

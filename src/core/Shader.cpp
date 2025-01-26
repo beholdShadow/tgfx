@@ -36,7 +36,7 @@ std::shared_ptr<Shader> Shader::makeWithColorFilter(
   return shader;
 }
 
-void Shader::setCustomParams(const std::vector<ShaderVar>&) {
+void Shader::setCustomVars(const std::vector<ShaderVar>&) {
   return;
 }
 
