@@ -33,6 +33,7 @@ class PathRef;
  */
 class Path {
  public:
+  static Path ParseSVGString(const std::string& svgStr);
   /**
    * Creates an empty path.
    */
@@ -323,7 +324,8 @@ class Path {
    * Returns last point on Path in lastPoint. Returns false if point array is empty.
    */
   bool getLastPoint(Point* lastPoint) const;
-
+  std::vector<uint8_t> getVerbs() const;
+  Point getPoint(unsigned index) const;
  private:
   std::shared_ptr<PathRef> pathRef = nullptr;
 

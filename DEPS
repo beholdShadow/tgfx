@@ -11,8 +11,8 @@
         "dir": "third_party/vendor_tools"
       },
       {
-        "url": "${PAG_GROUP}/pathkit.git",
-        "commit": "3a2d34b8e1465f264067f4e8c535c0fecfb98f9c",
+        "url": "https://github.com/beholdShadow/pathkit.git",
+        "commit": "f6aa374f2a7616f7234a2728ebbc3c2a1779f530",
         "dir": "third_party/pathkit"
       },
       {

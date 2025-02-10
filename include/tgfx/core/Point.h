@@ -126,6 +126,10 @@ struct Point {
     return {a.x + b.x, a.y + b.y};
   }
 
+  friend Point operator/(const Point& a, const Point& b) {
+    return {a.x / b.x, a.y / b.y};
+  }
+
   /** 
     * offset vector point v from Point. Sets Point to: (x + v.x, y + v.y).
     */
