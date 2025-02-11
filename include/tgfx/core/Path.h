@@ -33,7 +33,7 @@ class PathRef;
  */
 class Path {
  public:
-  static Path ParseSVGString(const std::string& svgStr);
+  static Path ParseSVGString(const char* svgStr);
   /**
    * Creates an empty path.
    */
@@ -104,6 +104,12 @@ class Path {
    * shape, since curves do not extend as far as their control points.
    */
   Rect getBounds() const;
+
+  /**
+   * Returns the bounds of the path's points. If the path contains 0 or 1 points, the bounds is set
+   * to (0,0,0,0), and isEmpty() will return true. Note: this bounds fits actual shape
+   */
+  Rect getTightBounds() const;
 
   /**
    * Returns true if Path is empty.

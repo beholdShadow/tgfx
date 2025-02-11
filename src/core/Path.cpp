@@ -170,6 +170,12 @@ Rect Path::getBounds() const {
   return pathRef->getBounds();
 }
 
+Rect Path::getTightBounds() const {
+  SkRect rect = SkRect::MakeEmpty();
+  TightBounds(pathRef->path, &rect);
+  return {rect.fLeft, rect.fTop, rect.fRight, rect.fBottom};
+}
+
 bool Path::isEmpty() const {
   return pathRef->path.isEmpty();
 }
@@ -480,9 +486,9 @@ std::vector<uint8_t> Path::getVerbs() const {
   return verbs;
 };
 
-Path Path::ParseSVGString(const std::string& svgStr) {
+Path Path::ParseSVGString(const char* svgStr) {
   Path p{};
-  SkParsePath::FromSVGString(svgStr.c_str(), &(p.writableRef()->path));
+  SkParsePath::FromSVGString(svgStr, &(p.writableRef()->path));
   return p;
 }
 
