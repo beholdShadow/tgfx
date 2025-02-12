@@ -474,15 +474,18 @@ bool Path::getLastPoint(Point* lastPoint) const {
   return false;
 };
 
-Point Path::getPoint(unsigned index) const {
-  auto skPoint = pathRef->path.getPoint(index);
-  return {skPoint.fX, skPoint.fY};
+std::vector<Point> Path::getPoints() const {
+  std::vector<SkPoint> skpts(countPoints());
+  std::vector<Point> pts(countPoints());
+  pathRef->path.getPoints(skpts.data(), skpts.size());
+  memcpy(pts.data(), skpts.data(), countPoints() * sizeof(Point));
+  return pts;
 };
 
 std::vector<uint8_t> Path::getVerbs() const {
   std::vector<uint8_t> verbs;
   verbs.resize(countVerbs());
-  auto skPoint = pathRef->path.getVerbs(verbs.data(), verbs.size());
+  auto res = pathRef->path.getVerbs(verbs.data(), verbs.size());
   return verbs;
 };
 

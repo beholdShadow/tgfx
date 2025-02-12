@@ -331,7 +331,7 @@ class Path {
    */
   bool getLastPoint(Point* lastPoint) const;
   std::vector<uint8_t> getVerbs() const;
-  Point getPoint(unsigned index) const;
+  std::vector<Point> getPoints() const;
  private:
   std::shared_ptr<PathRef> pathRef = nullptr;
 
