@@ -20,6 +20,7 @@
 #include <cmath>
 #include "ft2build.h"
 #include FT_BITMAP_H
+#include FT_BBOX_H
 #include FT_OUTLINE_H
 #include FT_SIZES_H
 #include FT_TRUETYPE_TABLES_H
@@ -449,7 +450,7 @@ bool FTScalerContext::generatePath(GlyphID glyphID, bool fauxBold, bool fauxItal
 
 void FTScalerContext::getBBoxForCurrentGlyph(FT_BBox* bbox) const {
   auto face = ftTypeface()->face;
-  FT_Outline_Get_CBox(&face->glyph->outline, bbox);
+  FT_Outline_Get_BBox(&face->glyph->outline, bbox);
 
   // outset the box to integral boundaries
   bbox->xMin &= ~63;
