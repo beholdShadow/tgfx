@@ -64,7 +64,7 @@ class GlyphRunList {
   bool isNative() const {
     Font font;
     _glyphRuns[0].glyphFace->asFont(&font);
-    return font.getTypeface()->getType() == Typeface::Type::Native;
+    return font.isNative();
   }
 
   /**

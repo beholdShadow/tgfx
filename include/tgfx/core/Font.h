@@ -48,7 +48,7 @@ class Font {
    * Returns a typeface reference if set, nullptr otherwise.
    */
   std::shared_ptr<Typeface> getTypeface() const;
-
+  bool isNative() const;
   /**
    * Returns true if the font has color glyphs, for example, color emojis.
    */
