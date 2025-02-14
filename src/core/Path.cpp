@@ -475,17 +475,17 @@ bool Path::getLastPoint(Point* lastPoint) const {
 };
 
 std::vector<Point> Path::getPoints() const {
-  std::vector<SkPoint> skpts(countPoints());
-  std::vector<Point> pts(countPoints());
-  pathRef->path.getPoints(skpts.data(), skpts.size());
-  memcpy(pts.data(), skpts.data(), countPoints() * sizeof(Point));
+  std::vector<SkPoint> skpts(static_cast<size_t>(countPoints()));
+  std::vector<Point> pts(static_cast<size_t>(countPoints()));
+  pathRef->path.getPoints(skpts.data(), static_cast<int>(skpts.size()));
+  memcpy(pts.data(), skpts.data(), static_cast<size_t>(countPoints()) * sizeof(Point));
   return pts;
 };
 
 std::vector<uint8_t> Path::getVerbs() const {
   std::vector<uint8_t> verbs;
-  verbs.resize(countVerbs());
-  auto res = pathRef->path.getVerbs(verbs.data(), verbs.size());
+  verbs.resize(static_cast<size_t>(countVerbs()));
+  pathRef->path.getVerbs(verbs.data(), countVerbs());
   return verbs;
 };
 
