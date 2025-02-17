@@ -244,7 +244,7 @@ bool CGMask::onFillText(const GlyphRunList* glyphRunList, const Stroke* stroke,
       CGContextSaveGState(cgContext);
       CGContextTranslateCTM(cgContext, position.x, position.y);
       CGContextScaleCTM(cgContext, 1.f, -1.f);
-      CTFontDrawGlyphs(ctFont, static_cast<const CGGlyph*>(&glyphIDs[i]), &point, 1, cgContext);
+      CTFontDrawGlyphs(ctFont, reinterpret_cast<const CGGlyph*>(&glyphIDs[i]), &point, 1, cgContext);
       CGContextRestoreGState(cgContext);
     }
     CFRelease(ctFont);

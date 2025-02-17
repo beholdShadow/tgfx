@@ -89,7 +89,7 @@ enum class PathVerb {
   /**
    * PathIterator returns 4 points.
    */
-  Cubic,
+  Cubic = 4, //和pathkit的SkPathVerb保持一致
   /**
    * PathIterator returns 0 points.
    */

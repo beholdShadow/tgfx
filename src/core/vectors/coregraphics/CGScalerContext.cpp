@@ -151,11 +151,11 @@ Rect CGScalerContext::getBounds(GlyphID glyphID, bool fauxBold, bool fauxItalic)
 float CGScalerContext::getAdvance(GlyphID glyphID, bool verticalText) const {
   CGSize cgAdvance;
   if (verticalText) {
-    CTFontGetAdvancesForGlyphs(ctFont, kCTFontOrientationVertical, &glyphID, &cgAdvance, 1);
+    CTFontGetAdvancesForGlyphs(ctFont, kCTFontOrientationVertical, reinterpret_cast<CGGlyph*>(&glyphID), &cgAdvance, 1);
     // Vertical advances are returned as widths instead of heights.
     std::swap(cgAdvance.width, cgAdvance.height);
   } else {
-    CTFontGetAdvancesForGlyphs(ctFont, kCTFontOrientationHorizontal, &glyphID, &cgAdvance, 1);
+    CTFontGetAdvancesForGlyphs(ctFont, kCTFontOrientationHorizontal, reinterpret_cast<CGGlyph*>(&glyphID), &cgAdvance, 1);
   }
   return verticalText ? static_cast<float>(cgAdvance.height) : static_cast<float>(cgAdvance.width);
 }
@@ -163,7 +163,7 @@ float CGScalerContext::getAdvance(GlyphID glyphID, bool verticalText) const {
 Point CGScalerContext::getVerticalOffset(GlyphID glyphID) const {
   // CTFontGetVerticalTranslationsForGlyphs produces cgVertOffset in CG units (pixels, y up).
   CGSize cgVertOffset;
-  CTFontGetVerticalTranslationsForGlyphs(ctFont, &glyphID, &cgVertOffset, 1);
+  CTFontGetVerticalTranslationsForGlyphs(ctFont, reinterpret_cast<CGGlyph*>(&glyphID), &cgVertOffset, 1);
   Point vertOffset = {static_cast<float>(cgVertOffset.width),
                       static_cast<float>(cgVertOffset.height)};
   // From CG units (pixels, y up) to Glyph units (pixels, y down).
@@ -270,7 +270,7 @@ bool CGScalerContext::generatePath(GlyphID glyphID, bool fauxBold, bool fauxItal
 
 Rect CGScalerContext::getImageTransform(GlyphID glyphID, Matrix* matrix) const {
   CGRect cgBounds;
-  CTFontGetBoundingRectsForGlyphs(ctFont, kCTFontOrientationHorizontal, &glyphID, &cgBounds, 1);
+  CTFontGetBoundingRectsForGlyphs(ctFont, kCTFontOrientationHorizontal, reinterpret_cast<CGGlyph*>(&glyphID), &cgBounds, 1);
   if (CGRectIsEmpty(cgBounds)) {
     return Rect::MakeEmpty();
   }
@@ -309,7 +309,7 @@ std::shared_ptr<ImageBuffer> CGScalerContext::generateImage(GlyphID glyphID,
   CGContextSetShouldAntialias(cgContext, true);
   CGContextSetShouldSmoothFonts(cgContext, true);
   auto point = CGPointMake(-bounds.left, bounds.bottom);
-  CTFontDrawGlyphs(ctFont, &glyphID, &point, 1, cgContext);
+  CTFontDrawGlyphs(ctFont, reinterpret_cast<const CGGlyph*>(&glyphID), &point, 1, cgContext);
   CGContextRelease(cgContext);
   pixelBuffer->unlockPixels();
   return pixelBuffer;

@@ -199,7 +199,7 @@ GlyphID CGTypeface::getGlyphID(Unichar unichar) const {
   UniChar utf16[2] = {0, 0};
   auto srcCount = ToUTF16(unichar, utf16);
   GlyphID macGlyphs[2] = {0, 0};
-  CTFontGetGlyphsForCharacters(ctFont, utf16, macGlyphs, static_cast<CFIndex>(srcCount));
+  CTFontGetGlyphsForCharacters(ctFont, utf16, reinterpret_cast<CGGlyph*>(macGlyphs), static_cast<CFIndex>(srcCount));
   return macGlyphs[0];
 }
 
