@@ -206,6 +206,8 @@ std::unique_ptr<const GLInterface> GLInterface::MakeNativeInterface(const GLProc
   functions->getUniformLocation =
       reinterpret_cast<GLGetUniformLocation*>(getter->getProcAddress("glGetUniformLocation"));
   functions->isTexture = reinterpret_cast<GLIsTexture*>(getter->getProcAddress("glIsTexture"));
+  functions->isBuffer = reinterpret_cast<GLIsBuffer*>(getter->getProcAddress("glIsBuffer"));
+  functions->isProgram = reinterpret_cast<GLIsBuffer*>(getter->getProcAddress("glIsProgram"));
   functions->lineWidth = reinterpret_cast<GLLineWidth*>(getter->getProcAddress("glLineWidth"));
   functions->linkProgram =
       reinterpret_cast<GLLinkProgram*>(getter->getProcAddress("glLinkProgram"));

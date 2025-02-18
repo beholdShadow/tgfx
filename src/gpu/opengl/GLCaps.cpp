@@ -239,6 +239,17 @@ int GLCaps::getMaxMipmapLevel(int width, int height) const {
   return static_cast<int>(std::log2(maxDimension));
 }
 
+bool GLCaps::getAttriubte(const std::string& key, void* result, unsigned int length) const {
+  if (key == "vertexArrayObjectSupport") {
+    if (length < sizeof(vertexArrayObjectSupport)) {
+      return false;
+    }
+    *static_cast<bool*>(result) = vertexArrayObjectSupport;
+    return true;
+  }
+  return false;
+}
+
 void GLCaps::initGLSupport(const GLInfo& info) {
   packRowLengthSupport = true;
   unpackRowLengthSupport = true;

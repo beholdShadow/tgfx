@@ -38,6 +38,8 @@ class Caps {
 
   virtual int getMaxMipmapLevel(int width, int height) const = 0;
 
+  virtual bool getAttriubte(const std::string& key, void* result, unsigned int length) const = 0;
+
   bool floatIs32Bits = true;
   int maxTextureSize = 0;
   size_t maxBufferVertices = 65535; //default 16bit vertics

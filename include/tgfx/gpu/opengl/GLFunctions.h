@@ -142,6 +142,8 @@ using GLGetVertexAttribPointerv = void GL_FUNCTION_TYPE(unsigned index, unsigned
 using GLGetAttribLocation = int GL_FUNCTION_TYPE(unsigned program, const char* name);
 using GLGetUniformLocation = int GL_FUNCTION_TYPE(unsigned program, const char* name);
 using GLIsTexture = unsigned char GL_FUNCTION_TYPE(unsigned texture);
+using GLIsBuffer = unsigned char GL_FUNCTION_TYPE(unsigned buffer);
+using GLIsProgram = unsigned char GL_FUNCTION_TYPE(unsigned program);
 using GLLineWidth = void GL_FUNCTION_TYPE(float width);
 using GLLinkProgram = void GL_FUNCTION_TYPE(unsigned program);
 using GLPixelStorei = void GL_FUNCTION_TYPE(unsigned pname, int param);
@@ -307,6 +309,8 @@ class GLFunctions {
   GLGetAttribLocation* getAttribLocation = nullptr;
   GLGetUniformLocation* getUniformLocation = nullptr;
   GLIsTexture* isTexture = nullptr;
+  GLIsBuffer* isBuffer = nullptr;
+  GLIsProgram* isProgram = nullptr;
   GLLineWidth* lineWidth = nullptr;
   GLLinkProgram* linkProgram = nullptr;
   GLPixelStorei* pixelStorei = nullptr;
