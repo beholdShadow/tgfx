@@ -51,6 +51,10 @@ class EmptyScalerContext : public ScalerContext {
   std::shared_ptr<ImageBuffer> generateImage(GlyphID, bool) const override {
     return nullptr;
   }
+  
+  std::shared_ptr<GlyphSdf> generateSdf(GlyphID, bool, bool) const override {
+    return std::make_shared<GlyphSdf>();
+  }
 };
 
 std::shared_ptr<ScalerContext> ScalerContext::MakeEmpty(float size) {
@@ -87,9 +91,5 @@ std::shared_ptr<ScalerContext> ScalerContext::Make(std::shared_ptr<Typeface> typ
 
 ScalerContext::ScalerContext(std::shared_ptr<Typeface> typeface, float size)
     : typeface(std::move(typeface)), textSize(size) {
-}
-
-std::shared_ptr<GlyphSdf> ScalerContext::generateSdf(GlyphID, bool, bool) const {
-  return nullptr;
 }
 }  // namespace tgfx

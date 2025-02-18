@@ -314,4 +314,10 @@ std::shared_ptr<ImageBuffer> CGScalerContext::generateImage(GlyphID glyphID,
   pixelBuffer->unlockPixels();
   return pixelBuffer;
 }
+
+std::shared_ptr<GlyphSdf> CGScalerContext::generateSdf(GlyphID glyphID, bool fauxBold, bool fauxItalic) const {
+   auto sdfInfo = std::make_shared<GlyphSdf>();
+   generatePath(glyphID, fauxBold, fauxItalic, &sdfInfo->path);
+   return sdfInfo;
+}
 }  // namespace tgfx

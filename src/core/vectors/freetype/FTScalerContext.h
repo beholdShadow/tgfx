@@ -63,7 +63,10 @@ class FTScalerContext : public ScalerContext {
   Matrix getExtraMatrix(bool fauxItalic) const;
 
   FTTypeface* ftTypeface() const;
-
+  
+  bool generatePathInternal(GlyphID glyphID, bool fauxBold, bool fauxItalic,
+                            Path* path) const;
+  
   float textScale = 1.0f;
   Point extraScale = Point::Make(1.f, 1.f);
   FT_Size ftSize = nullptr;

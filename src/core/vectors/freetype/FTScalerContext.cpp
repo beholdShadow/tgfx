@@ -59,7 +59,7 @@ std::shared_ptr<ScalerContext> ScalerContext::CreateNew(std::shared_ptr<Typeface
                                                         float size) {
   DEBUG_ASSERT(typeface != nullptr);
 #if defined(TGFX_FREETYPE_NATIVE)
-  return typeface->getType() == Typeface::Type::Native? ScalerContext::CreateNative(std::move(typeface), size) : std::make_shared<FTScalerContext>(std::move(typeface), size);
+  return typeface->getType() != Typeface::Type::FreeType? ScalerContext::CreateNative(std::move(typeface), size) : std::make_shared<FTScalerContext>(std::move(typeface), size);
 #else
   return std::make_shared<FTScalerContext>(std::move(typeface), size);
 #endif
@@ -423,6 +423,12 @@ static bool GenerateGlyphPath(FT_Face face, Path* path) {
 bool FTScalerContext::generatePath(GlyphID glyphID, bool fauxBold, bool fauxItalic,
                                    Path* path) const {
   std::lock_guard<std::mutex> autoLock(ftTypeface()->locker);
+  bool result = generatePathInternal(glyphID, fauxBold, fauxItalic, path);
+  return result;
+}
+
+bool FTScalerContext::generatePathInternal(GlyphID glyphID, bool fauxBold, bool fauxItalic,
+                                   Path* path) const {
   auto face = ftTypeface()->face;
   // FT_IS_SCALABLE is documented to mean the face contains outline glyphs.
   if (!FT_IS_SCALABLE(face) || setupSize(fauxItalic)) {
@@ -626,7 +632,7 @@ bool FTScalerContext::loadBitmapGlyph(GlyphID glyphID, FT_Int32 glyphFlags, bool
 std::shared_ptr<GlyphSdf> FTScalerContext::generateSdf(GlyphID glyphID, bool fauxBold, bool fauxItalic) const {
   std::lock_guard<std::mutex> autoLock(ftTypeface()->locker);
   auto sdfInfo = std::make_shared<GlyphSdf>();
-  generatePath(glyphID, fauxBold, fauxItalic, &sdfInfo->path);
+  generatePathInternal(glyphID, fauxBold, fauxItalic, &sdfInfo->path);
   // auto glyphFlags = loadGlyphFlags;
   // glyphFlags |= FT_LOAD_RENDER;
   // glyphFlags &= ~FT_LOAD_NO_BITMAP;

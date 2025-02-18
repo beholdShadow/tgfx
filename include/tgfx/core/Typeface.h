@@ -133,7 +133,8 @@ class Typeface {
 
   enum Type {
       Native = 0,
-      FreeType = 1
+      CoreText = 1,
+      FreeType = 2
   };
   virtual Type getType() const = 0;
 

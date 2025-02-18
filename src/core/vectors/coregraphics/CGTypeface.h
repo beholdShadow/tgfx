@@ -61,7 +61,7 @@ class CGTypeface : public Typeface {
   std::shared_ptr<Data> copyTableData(FontTableTag tag) const override;
 
   Type getType() const override {
-    return Native;
+    return _hasColor ? Native : CoreText;
   }
  protected:
 #ifdef TGFX_USE_GLYPH_TO_UNICODE

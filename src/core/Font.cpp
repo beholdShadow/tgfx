@@ -60,7 +60,8 @@ std::shared_ptr<Typeface> Font::getTypeface() const {
 }
 
 bool Font::isNative() const {
-  return scalerContext->getTypeface()->getType() == Typeface::Type::Native;
+  auto typeface =  scalerContext->getTypeface();
+  return typeface? typeface->getType() == Typeface::Type::Native : true;
 }
 
 bool Font::hasColor() const {
