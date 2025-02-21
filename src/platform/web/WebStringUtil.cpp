@@ -20,7 +20,7 @@
 #include <emscripten.h>
 #include <emscripten/bind.h>
 namespace tgfx {
-std::vector<std::string> StringUtil::SplitToCharArray(const std::string& text) {
+std::vector<std::string> StringUtil::SplitFromPlatform(const std::string& text) {
     // 调用 JavaScript 的 split 方法
     emscripten::val jsArray = emscripten::val::global("Array").call<emscripten::val>("from", text);
     // 将 JavaScript 数组转换为 C++ vector

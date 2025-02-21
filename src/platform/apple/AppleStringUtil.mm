@@ -1,13 +1,26 @@
 #include "tgfx/platform/StringUtil.h"
 #include <CoreText/CoreText.h>
 #include <CoreFoundation/CoreFoundation.h>
-
+#include <Foundation/Foundation.h>
 namespace tgfx {
-std::vector<std::string> StringUtil::SplitToCharArray(const std::string& text) {
-    // 调用 JavaScript 的 split 方法
-    std::vector<std::string> res;
-    return res;
+std::vector<std::string> StringUtil::SplitFromPlatform(const std::string& text) {
+    __block std::vector<std::string> result;
+    // 将 std::string (UTF-8) 转换为 NSString
+    NSString *str = [NSString stringWithUTF8String:text.c_str()];
+    if (!str) {
+        // 处理无效的 UTF-8 字符串（可选：返回空向量或抛出异常）
+        return result;
+    }
+    // 使用 NSString 的枚举方法处理字符
+    [str enumerateSubstringsInRange:NSMakeRange(0, [str length])
+                            options:NSStringEnumerationByComposedCharacterSequences
+                         usingBlock:^(NSString *substring, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
+        std::string cStr = [substring UTF8String];
+        result.push_back(cStr);
+    }];
+    return result;
 }
+
 
 bool StringUtil::IsEmoji(const std::string& text) {
     if (text.empty()) return false;

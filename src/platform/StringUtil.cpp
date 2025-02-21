@@ -20,7 +20,7 @@
 namespace tgfx {
 std::string StringUtil::Substr(const std::string& text, size_t startPos, size_t len) {
     std::string res;
-    auto charArray = StringUtil::SplitToCharArray(text);
+    auto charArray = StringUtil::SplitFromPlatform(text);
     int _len = static_cast<int>(len);
     for (size_t i = startPos; i < charArray.size(); i++) {
         if (_len-- <= 0) {
