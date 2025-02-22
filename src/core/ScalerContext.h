@@ -56,7 +56,15 @@ class ScalerContext {
   virtual Rect getBounds(GlyphID glyphID, bool fauxBold, bool fauxItalic) const = 0;
 
   virtual float getAdvance(GlyphID glyphID, bool verticalText) const = 0;
+  
+  virtual Rect getBounds(GlyphIDArray glyphID, bool fauxBold, bool fauxItalic) const {
+    return getBounds(glyphID->unicodes()[0], fauxBold, fauxItalic);
+  }
 
+  virtual float getAdvance(GlyphIDArray glyphID, bool verticalText) const {
+    return getAdvance(glyphID->unicodes()[0], verticalText);
+  }
+  
   virtual Point getVerticalOffset(GlyphID glyphID) const = 0;
 
   virtual bool generatePath(GlyphID glyphID, bool fauxBold, bool fauxItalic, Path* path) const = 0;
@@ -64,8 +72,12 @@ class ScalerContext {
   virtual Rect getImageTransform(GlyphID glyphID, Matrix* matrix) const = 0;
 
   virtual std::shared_ptr<ImageBuffer> generateImage(GlyphID glyphID, bool tryHardware) const = 0;
-
-  virtual std::shared_ptr<GlyphSdf> generateSdf(GlyphID glyphID, bool fauxBold, bool fauxItalic) const = 0;
+  
+  virtual std::shared_ptr<ImageBuffer> generateImage(GlyphIDArray, bool) const {
+    return nullptr;
+  }
+  
+  virtual std::shared_ptr<GlyphSdf> generateSdf(GlyphIDArray glyphID, bool fauxBold, bool fauxItalic) const = 0;
  protected:
   // Note: This could be nullptr.
   std::shared_ptr<Typeface> typeface = nullptr;

@@ -80,17 +80,26 @@ std::shared_ptr<Typeface> Typeface::MakeEmpty() {
   return emptyTypeface;
 }
 
-GlyphID Typeface::getGlyphID(const std::string& name) const {
+GlyphIDArray Typeface::getGlyphID(const std::string& name) const {
   if (name.empty()) {
-    return 0;
+    return Data::MakeEmptyUnicode();
   }
   auto count = UTF::CountUTF8(name.c_str(), name.size());
   if (count <= 0) {
-    return 0;
+    return Data::MakeEmptyUnicode();
   }
-  const char* start = name.data();
-  auto unichar = UTF::NextUTF8(&start, start + name.size());
-  return getGlyphID(unichar);
+  const char* start = name.data(); 
+  const char* end =  start + name.size();
+  std::vector<uint32_t> unicodes;
+  while(count-- > 0) {
+    auto unichar = UTF::NextUTF8(&start, end);
+    unicodes.push_back(unichar);
+  }
+  if (unicodes.size() > 1) {
+    return Data::MakeWithCopy(unicodes.data(), unicodes.size() * sizeof(uint32_t));
+  }
+  auto id = getGlyphID(unicodes[0]);
+  return Data::MakeWithCopy(&id, sizeof(id));
 }
 
 std::vector<Unichar> Typeface::getGlyphToUnicodeMap() const {

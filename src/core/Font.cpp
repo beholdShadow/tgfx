@@ -92,10 +92,9 @@ void Font::setSize(float newSize) {
   }
   scalerContext = ScalerContext::Make(scalerContext->getTypeface(), newSize);
 }
-
-GlyphID Font::getGlyphID(const std::string& name) const {
+GlyphIDArray Font::getGlyphID(const std::string& name) const {
   auto typeface = scalerContext->getTypeface();
-  return typeface ? typeface->getGlyphID(name) : 0;
+  return typeface ? typeface->getGlyphID(name) : Data::MakeEmptyUnicode();
 }
 
 GlyphID Font::getGlyphID(Unichar unichar) const {
@@ -119,6 +118,21 @@ float Font::getAdvance(GlyphID glyphID, bool verticalText) const {
     return 0;
   }
   return scalerContext->getAdvance(glyphID, verticalText);
+}
+
+Rect Font::getBounds(GlyphIDArray glyphID) const {
+  if (glyphID->unicodeSize() == 0) {
+    return Rect::MakeEmpty();
+  }
+  return scalerContext->getBounds(glyphID, fauxBold, fauxItalic);
+}
+
+float Font::getAdvance(GlyphIDArray glyphID, bool verticalText) const {
+  if (glyphID->unicodeSize() == 0) {
+    return 0;
+  }
+  return scalerContext->getAdvance(glyphID, verticalText);
+
 }
 
 Point Font::getVerticalOffset(GlyphID glyphID) const {
@@ -152,8 +166,17 @@ std::shared_ptr<Image> Font::getImage(GlyphID glyphID, Matrix* matrix) const {
   return Image::MakeFrom(std::move(generator));
 }
 
-std::shared_ptr<GlyphSdf> Font::getSdf(GlyphID glyphID) const {
-  if (glyphID == 0) {
+std::shared_ptr<Image> Font::getImage(GlyphIDArray glyphID, Matrix* matrix) const {
+  if (glyphID->unicodeSize() == 0) {
+    return nullptr;
+  }
+  auto bounds = scalerContext->getBounds(glyphID, fauxBold, fauxItalic);
+  matrix->postTranslate(bounds.x(), bounds.y());
+  return Image::MakeFrom(scalerContext->generateImage(glyphID, true));
+}
+
+std::shared_ptr<GlyphSdf> Font::getSdf(GlyphIDArray glyphID) const {
+  if (glyphID->unicodeSize() == 0) {
     return std::make_shared<GlyphSdf>();
   }
   return scalerContext->generateSdf(glyphID, fauxBold, fauxItalic);

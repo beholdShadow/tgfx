@@ -24,6 +24,54 @@
 #include <vector>
 
 namespace tgfx {
+const uint32_t MaxUInt32 = 0xFFFFFFFF;
+const float MaxFloat     = 3.402823466e+38F;
+const float MinPosFloat  = 1.175494351e-38F;
+    
+const float Pi     = 3.141592654f;
+const float TwoPi  = 6.283185307f;
+const float PiHalf = 1.570796327f;
+
+const float Epsilon = 0.000001f;
+const float ZeroEpsilon = 32.0f * MinPosFloat;  // Very small epsilon for checking against 0.0f
+
+static inline float degToRad(float f)
+{
+    return f * 0.017453293f;
+}
+
+static inline float radToDeg(float f)
+{
+    return f * 57.29577951f;
+}
+
+inline bool IsFloatEqual(float x, float y, float tol = 0.0001f)
+{
+    bool bRet = false;
+    if (std::abs(x - y) < tol)
+    {
+        bRet = true;
+    }
+    return bRet;
+}
+inline bool IsFloatZero(float val, float tol = 0.0001f)
+{
+    return IsFloatEqual(val, 0.0f, tol);
+}
+template<class T>
+inline T Clamp(const T& t, const T& tLow, const T& tHigh)
+{
+    if (t < tHigh)
+    {
+        return ((t > tLow) ? t : tLow);
+    }
+    return tHigh;
+}
+template<class T>
+inline T Mix(const T& t1, const T& t2, const float& ratio)
+{
+    return t1 * (1.0f - ratio) + t2 * ratio;
+}
 /**
  * Point holds two 32-bit floating point coordinates.
  */
@@ -127,6 +175,9 @@ struct Point {
   }
 
   friend Point operator/(const Point& a, const Point& b) {
+    if (IsFloatZero(b.x * b.y)) {
+      return {a.x, a.y};
+    }
     return {a.x / b.x, a.y / b.y};
   }
 

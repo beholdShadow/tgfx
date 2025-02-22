@@ -21,7 +21,7 @@
 #include "core/utils/Log.h"
 #include "platform/apple/BitmapContextUtil.h"
 #include "tgfx/core/PathEffect.h"
-
+#include "tgfx/core/UTF.h"
 namespace tgfx {
 static constexpr float StdFakeBoldInterpKeys[] = {
     9.f,
@@ -148,6 +148,28 @@ Rect CGScalerContext::getBounds(GlyphID glyphID, bool fauxBold, bool fauxItalic)
   return bounds;
 }
 
+Rect CGScalerContext::getBounds(GlyphIDArray glyphID, bool fauxBold, bool fauxItalic) const {
+  if (glyphID->unicodeSize() < 2) {
+    return getBounds(glyphID->unicodes()[0], fauxBold, fauxItalic);
+  }
+  tgfx::Rect bounds = tgfx::Rect::MakeEmpty();
+  excuteCodePoints(glyphID, [&](CTLineRef line) {
+    CGRect cgBounds = CTLineGetImageBounds(line, nullptr);
+    CGFloat advance = CTLineGetTypographicBounds(line, NULL, NULL, NULL);
+    bounds = Rect::MakeXYWH(static_cast<float>(cgBounds.origin.x),
+                                 static_cast<float>(-cgBounds.origin.y - cgBounds.size.height),
+                                 static_cast<float>(cgBounds.size.width),
+                                 static_cast<float>(cgBounds.size.height));
+    if (fauxBold) {
+      auto fauxBoldSize = textSize * fauxBoldScale;
+      bounds.outset(fauxBoldSize, fauxBoldSize);
+    }
+    bounds.roundOut();
+    bounds.outset(1.f, 1.f);
+  });
+  return bounds;
+}
+
 float CGScalerContext::getAdvance(GlyphID glyphID, bool verticalText) const {
   CGSize cgAdvance;
   if (verticalText) {
@@ -158,6 +180,21 @@ float CGScalerContext::getAdvance(GlyphID glyphID, bool verticalText) const {
     CTFontGetAdvancesForGlyphs(ctFont, kCTFontOrientationHorizontal, reinterpret_cast<CGGlyph*>(&glyphID), &cgAdvance, 1);
   }
   return verticalText ? static_cast<float>(cgAdvance.height) : static_cast<float>(cgAdvance.width);
+}
+
+float CGScalerContext::getAdvance(GlyphIDArray glyphID, bool verticalText) const {
+  if (glyphID->unicodeSize() < 2) {
+    return getAdvance(glyphID->unicodes()[0], verticalText);
+  }
+  double advance = 0.0;
+  excuteCodePoints(glyphID, [&](CTLineRef line) {
+    CGRect cgBounds = CTLineGetImageBounds(line, nullptr);
+    if (verticalText) {
+      advance = cgBounds.size.height;
+    }
+    advance = CTLineGetTypographicBounds(line, NULL, NULL, NULL);
+  });
+  return static_cast<float>(advance);
 }
 
 Point CGScalerContext::getVerticalOffset(GlyphID glyphID) const {
@@ -315,9 +352,89 @@ std::shared_ptr<ImageBuffer> CGScalerContext::generateImage(GlyphID glyphID,
   return pixelBuffer;
 }
 
-std::shared_ptr<GlyphSdf> CGScalerContext::generateSdf(GlyphID glyphID, bool fauxBold, bool fauxItalic) const {
-   auto sdfInfo = std::make_shared<GlyphSdf>();
-   generatePath(glyphID, fauxBold, fauxItalic, &sdfInfo->path);
-   return sdfInfo;
+std::shared_ptr<GlyphSdf> CGScalerContext::generateSdf(GlyphIDArray glyphID, bool fauxBold, bool fauxItalic) const {
+  auto sdfInfo = std::make_shared<GlyphSdf>();
+  generatePath(glyphID->unicodes()[0], fauxBold, fauxItalic, &sdfInfo->path);
+  return sdfInfo;
 }
+
+bool CGScalerContext::excuteCodePoints(GlyphIDArray glyphID, std::function<void(CTLineRef CTLineRef)> func) const {
+  auto unicodes = glyphID->unicodes(); //复合emoji 多个utf32编码字符组合的
+  std::string text;
+  for (size_t i = 0; i < glyphID->unicodeSize(); i++) {
+    text += UTF::ToUTF8(unicodes[i]);
+  }
+  CFStringRef cfText; CFAttributedStringRef attrString = nullptr;
+  CTLineRef line = nullptr; CFArrayRef runs = nullptr;
+  std::shared_ptr<PixelBuffer> pixelBuffer = nullptr;
+  do {
+    cfText = CFStringCreateWithCString(kCFAllocatorDefault, text.c_str(), kCFStringEncodingUTF8);
+    if (!cfText) return false;
+    CFDictionaryRef attributes = CFDictionaryCreate(
+                                    kCFAllocatorDefault,
+                                    (const void**)&kCTFontAttributeName,
+                                    (const void**)&ctFont,
+                                    1,
+                                    &kCFTypeDictionaryKeyCallBacks,
+                                    &kCFTypeDictionaryValueCallBacks
+                                );
+    attrString = CFAttributedStringCreate(kCFAllocatorDefault, cfText, attributes);
+    if (!attrString) { break; }
+    line = CTLineCreateWithAttributedString(attrString);
+    if (!line) { break; }
+    runs = CTLineGetGlyphRuns(line);
+    if (!runs || CFArrayGetCount(runs) == 0) { break; }
+    
+    func(line);
+    
+  } while(0);
+  // 释放资源
+  if (line) {
+    CFRelease(line);
+  }
+  if (attrString) {
+    CFRelease(attrString);
+  }
+  if (cfText) {
+    CFRelease(cfText);
+  }
+  return true;
+}
+
+std::shared_ptr<ImageBuffer> CGScalerContext::generateImage(GlyphIDArray glyphID,
+                                                            bool tryHardware) const {
+  std::shared_ptr<PixelBuffer> pixelBuffer;
+  excuteCodePoints(glyphID, [&](CTLineRef line) {
+    CGRect cgBounds = CTLineGetImageBounds(line, nullptr);
+    CGFloat advance = CTLineGetTypographicBounds(line, NULL, NULL, NULL);
+    auto bounds = Rect::MakeXYWH(static_cast<float>(cgBounds.origin.x),
+                                 static_cast<float>(-cgBounds.origin.y - cgBounds.size.height),
+                                 static_cast<float>(cgBounds.size.width),
+                                 static_cast<float>(cgBounds.size.height));
+    CTFontSymbolicTraits traits = CTFontGetSymbolicTraits(ctFont);
+    auto hasColor = static_cast<bool>(traits & kCTFontTraitColorGlyphs);
+    auto width = static_cast<int>(bounds.width());
+    auto height = static_cast<int>(bounds.height());
+    pixelBuffer = PixelBuffer::Make(width, height, !hasColor, tryHardware);
+    if (pixelBuffer == nullptr) { return; }
+    auto pixels = pixelBuffer->lockPixels();
+    auto cgContext = CreateBitmapContext(pixelBuffer->info(), pixels);
+    if (cgContext == nullptr) {
+      pixelBuffer->unlockPixels();
+      return;
+    }
+    CGContextClearRect(cgContext, CGRectMake(0, 0, bounds.width(), bounds.height()));
+    CGContextSetBlendMode(cgContext, kCGBlendModeCopy);
+    CGContextSetTextDrawingMode(cgContext, kCGTextFill);
+    CGContextSetShouldAntialias(cgContext, true);
+    CGContextSetShouldSmoothFonts(cgContext, true);
+    auto point = CGPointMake(-bounds.left, bounds.bottom);
+    CGContextSetTextPosition(cgContext, point.x, point.y);
+    CTLineDraw(line, cgContext);
+    CGContextRelease(cgContext);
+    pixelBuffer->unlockPixels();
+  });
+  return pixelBuffer;
+}
+
 }  // namespace tgfx

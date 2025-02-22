@@ -33,9 +33,13 @@ class CGScalerContext : public ScalerContext {
   FontMetrics getFontMetrics() const override;
 
   Rect getBounds(GlyphID glyphID, bool fauxBold, bool fauxItalic) const override;
+  
+  Rect getBounds(GlyphIDArray glyphID, bool fauxBold, bool fauxItalic) const override;
 
   float getAdvance(GlyphID glyphID, bool verticalText) const override;
 
+  float getAdvance(GlyphIDArray glyphID, bool verticalText) const override;
+  
   Point getVerticalOffset(GlyphID glyphID) const override;
 
   bool generatePath(GlyphID glyphID, bool fauxBold, bool fauxItalic, Path* path) const override;
@@ -43,9 +47,12 @@ class CGScalerContext : public ScalerContext {
   Rect getImageTransform(GlyphID glyphID, Matrix* matrix) const override;
 
   std::shared_ptr<ImageBuffer> generateImage(GlyphID glyphID, bool tryHardware) const override;
+  std::shared_ptr<ImageBuffer> generateImage(GlyphIDArray glyphID, bool tryHardware) const override;
   
-  std::shared_ptr<GlyphSdf> generateSdf(GlyphID, bool, bool) const override;
- private:
+  std::shared_ptr<GlyphSdf> generateSdf(GlyphIDArray, bool, bool) const override;
+private:
+  bool excuteCodePoints(GlyphIDArray glyphID, std::function<void(CTLineRef CTLineRef)> func) const;
+private:
   float fauxBoldScale = 1.0f;
   CTFontRef ctFont = nullptr;
 };

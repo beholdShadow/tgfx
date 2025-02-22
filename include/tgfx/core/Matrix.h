@@ -22,54 +22,6 @@
 #include "tgfx/core/Rect.h"
 
 namespace tgfx {
-const uint32_t MaxUInt32 = 0xFFFFFFFF;
-const float MaxFloat     = 3.402823466e+38F;
-const float MinPosFloat  = 1.175494351e-38F;
-    
-const float Pi     = 3.141592654f;
-const float TwoPi  = 6.283185307f;
-const float PiHalf = 1.570796327f;
-
-const float Epsilon = 0.000001f;
-const float ZeroEpsilon = 32.0f * MinPosFloat;  // Very small epsilon for checking against 0.0f
-
-static inline float degToRad(float f)
-{
-    return f * 0.017453293f;
-}
-
-static inline float radToDeg(float f)
-{
-    return f * 57.29577951f;
-}
-
-inline bool IsFloatEqual(float x, float y, float tol = 0.0001f)
-{
-    bool bRet = false;
-    if (std::abs(x - y) < tol)
-    {
-        bRet = true;
-    }
-    return bRet;
-}
-inline bool IsFloatZero(float val, float tol = 0.0001f)
-{
-    return IsFloatEqual(val, 0.0f, tol);
-}
-template<class T>
-inline T Clamp(const T& t, const T& tLow, const T& tHigh)
-{
-    if (t < tHigh)
-    {
-        return ((t > tLow) ? t : tLow);
-    }
-    return tHigh;
-}
-template<class T>
-inline T Mix(const T& t1, const T& t2, const float& ratio)
-{
-    return t1 * (1.0f - ratio) + t2 * ratio;
-}
 class Vec3f
 {
 public:
@@ -673,6 +625,8 @@ public:
 		return Vec3f(radToDeg(rx), radToDeg(ry), radToDeg(rz));
 	}
 };
+
+class Matrix;
 class Matrix4f
 {
 public:
@@ -681,7 +635,9 @@ public:
         float c[4][4];    // Column major order for OpenGL: c[column][row]
         float x[16];
     };
-
+    
+    static Matrix4f MakeFrom2D(Matrix mat2d);
+  
     static Matrix4f TransMat( float x, float y, float z )
     {
         Matrix4f m;
@@ -1299,15 +1255,6 @@ public:
  */
 class Matrix {
  public:
-  static Matrix MakeAll(const Matrix4f& mat4) {
-    // tgfx::PrintError("Matrix MakeAll mat = ");
-    // for (auto i  = 0 ; i < 16; i++) {
-    //   tgfx::PrintError("x[%d] = %f ", i, mat4.x[i]);
-    // }
-    return Matrix::MakeAll(mat4.c[0][0], mat4.c[1][0], mat4.c[3][0], 
-                            mat4.c[0][1], mat4.c[1][1], mat4.c[3][1]);
-  }
-
   /**
    * Sets Matrix to scale by (sx, sy). Returned matrix is:
    *
@@ -1406,6 +1353,11 @@ class Matrix {
     return {scaleX, skewX, transX, skewY, scaleY, transY};
   }
 
+  static Matrix MakeAll(const Matrix4f& mat4) {
+    return Matrix::MakeAll(mat4.c[0][0], mat4.c[1][0], mat4.c[3][0], 
+                            mat4.c[0][1], mat4.c[1][1], mat4.c[3][1]);
+  }
+  
   /**
    * Returns reference to const identity Matrix. Returned Matrix is set to:
    *

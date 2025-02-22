@@ -22,6 +22,19 @@
 
 namespace tgfx {
 
+Matrix4f Matrix4f::MakeFrom2D(Matrix mat2d)
+{
+    Matrix4f m;
+
+    m.c[0][0] = mat2d.getScaleX();
+    m.c[1][0] = mat2d.getSkewX();
+    m.c[3][0] = mat2d.getTranslateX();
+    m.c[0][1] = mat2d.getSkewY();
+    m.c[1][1] = mat2d.getScaleY();
+    m.c[3][1] = mat2d.getTranslateY();
+    return m;
+}
+
 void Matrix::reset() {
   values[SCALE_X] = values[SCALE_Y] = 1;
   values[SKEW_X] = values[SKEW_Y] = values[TRANS_X] = values[TRANS_Y] = 0;

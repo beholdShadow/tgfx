@@ -56,6 +56,16 @@ std::shared_ptr<Data> Data::MakeWithoutCopy(const void* data, size_t length) {
   return std::shared_ptr<Data>(byteData);
 }
 
+std::shared_ptr<Data> Data::MakeEmptyUnicode() {
+  auto data = new (std::nothrow) Unichar[1];
+  if (data == nullptr) {
+    return nullptr;
+  }
+  data[0] = 0;
+  auto byteData = new Data(data, sizeof(Unichar), Data::DeleteProc, nullptr);
+  return std::shared_ptr<Data>(byteData);
+}
+
 void Data::DeleteProc(const void* data, void*) {
   if (data != nullptr) {
     delete[] reinterpret_cast<const uint8_t*>(data);

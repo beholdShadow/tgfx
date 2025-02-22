@@ -73,7 +73,7 @@ static constexpr inline int32_t left_shift(int32_t value, int32_t shift) {
   return (int32_t)((uint32_t)value << shift);
 }
 
-int32_t UTF::NextUTF8(const char** ptr, const char* end) {
+uint32_t UTF::NextUTF8(const char** ptr, const char* end) {
   if (!ptr || !end) {
     return -1;
   }
@@ -108,7 +108,7 @@ int32_t UTF::NextUTF8(const char** ptr, const char* end) {
   return c;
 }
 
-std::string UTF::ToUTF8(int32_t unichar) {
+std::string UTF::ToUTF8(uint32_t unichar) {
   if ((uint32_t)unichar > 0x10FFFF) {
     return "";
   }

@@ -33,11 +33,12 @@ std::vector<std::string> StringUtil::SplitFromPlatform(const std::string& text) 
 }
 
 bool StringUtil::IsEmoji(const std::string& text) {
-    auto scalerContextClass = emscripten::val::module_property("ScalerContext");
-    if (!scalerContextClass.as<bool>()) {
-        return false;
-    }
-    return scalerContextClass.call<bool>("isEmoji", text);
+  if (text.empty()) { return false; }
+  auto scalerContextClass = emscripten::val::module_property("ScalerContext");
+  if (!scalerContextClass.as<bool>()) {
+      return false;
+  }
+  return scalerContextClass.call<bool>("isEmoji", text);
 }   
 
 }  // namespace tgfx

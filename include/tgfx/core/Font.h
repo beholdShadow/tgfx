@@ -107,7 +107,7 @@ class Font {
    * Returns the glyph ID corresponds to the specified glyph name. The glyph name must be in utf-8
    * encoding. Returns 0 if the glyph name is not in this Font.
    */
-  GlyphID getGlyphID(const std::string& name) const;
+  GlyphIDArray getGlyphID(const std::string& name) const;
 
   /**
    * Returns the glyph ID corresponds to the specified unicode code point. Returns 0 if the code
@@ -133,7 +133,20 @@ class Font {
    * supported on the web platform.
    */
   float getAdvance(GlyphID glyphID, bool verticalText = false) const;
+  
+  /**
+   * Returns the bounding box of the specified multi code points glyph.
+   */
+  Rect getBounds(GlyphIDArray glyphID) const;
 
+  /**
+   * Returns the advance for specified multi code points  glyph.
+   * @param glyphID The id of specified glyph.
+   * @param verticalText The intended drawing orientation of the glyph. Please note that it is not
+   * supported on the web platform.
+   */
+  float getAdvance(GlyphIDArray glyphID, bool verticalText = false) const;
+  
   /**
    * Calculates the offset from the default (horizontal) origin to the vertical origin for specified
    * glyph.
@@ -152,7 +165,8 @@ class Font {
    * method.
    */
   std::shared_ptr<Image> getImage(GlyphID glyphID, Matrix* matrix) const;
-  std::shared_ptr<GlyphSdf> getSdf(GlyphID glyphID) const;
+  std::shared_ptr<Image> getImage(GlyphIDArray glyphID, Matrix* matrix) const;
+  std::shared_ptr<GlyphSdf> getSdf(GlyphIDArray glyphID) const;
   /**
    * Compares two fonts for equality.
    */

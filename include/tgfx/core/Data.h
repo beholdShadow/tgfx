@@ -24,6 +24,10 @@
 
 namespace tgfx {
 /**
+ * 32-bit unsigned integer to hold a UTF-32 code unit.
+ */
+typedef uint32_t Unichar;
+/**
  * Data holds an immutable data buffer. Not only is the Data immutable, but the actual pointer
  * returned by data() or bytes() is guaranteed to always be the same for the life of this instance.
  */
@@ -91,7 +95,7 @@ class Data {
   const uint8_t* bytes() const {
     return reinterpret_cast<const uint8_t*>(_data);
   }
-
+  
   /**
    * Returns the byte size.
    */
@@ -106,6 +110,22 @@ class Data {
     return _size == 0;
   }
 
+  /**
+   * Returns the uint32_t size for unicode used by GlyphIDArray.
+   */
+  const Unichar* unicodes() const {
+    return reinterpret_cast<const Unichar*>(_data);
+  }
+  size_t unicodeSize() const {
+    return _size / sizeof(Unichar);
+  }
+  /**
+   * Call this when the data parameter is already const, suitable for const globals. The caller must
+   * ensure the data parameter will always be the same and alive for the lifetime of the returned
+   * Data.
+   */
+  static std::shared_ptr<Data> MakeEmptyUnicode();
+  
  protected:
   const void* _data = nullptr;
   size_t _size = 0;
