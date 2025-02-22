@@ -119,6 +119,9 @@ class Data {
   size_t unicodeSize() const {
     return _size / sizeof(Unichar);
   }
+  bool isCodePoints() {
+    return _size / sizeof(Unichar) > 1;
+  }
   /**
    * Call this when the data parameter is already const, suitable for const globals. The caller must
    * ensure the data parameter will always be the same and alive for the lifetime of the returned

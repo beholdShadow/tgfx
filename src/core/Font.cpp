@@ -121,14 +121,14 @@ float Font::getAdvance(GlyphID glyphID, bool verticalText) const {
 }
 
 Rect Font::getBounds(GlyphIDArray glyphID) const {
-  if (glyphID->unicodeSize() == 0) {
+  if (glyphID->empty()) {
     return Rect::MakeEmpty();
   }
   return scalerContext->getBounds(glyphID, fauxBold, fauxItalic);
 }
 
 float Font::getAdvance(GlyphIDArray glyphID, bool verticalText) const {
-  if (glyphID->unicodeSize() == 0) {
+  if (glyphID->empty()) {
     return 0;
   }
   return scalerContext->getAdvance(glyphID, verticalText);
@@ -167,7 +167,7 @@ std::shared_ptr<Image> Font::getImage(GlyphID glyphID, Matrix* matrix) const {
 }
 
 std::shared_ptr<Image> Font::getImage(GlyphIDArray glyphID, Matrix* matrix) const {
-  if (glyphID->unicodeSize() == 0) {
+  if (glyphID->empty()) {
     return nullptr;
   }
   auto bounds = scalerContext->getBounds(glyphID, fauxBold, fauxItalic);
@@ -176,7 +176,7 @@ std::shared_ptr<Image> Font::getImage(GlyphIDArray glyphID, Matrix* matrix) cons
 }
 
 std::shared_ptr<GlyphSdf> Font::getSdf(GlyphIDArray glyphID) const {
-  if (glyphID->unicodeSize() == 0) {
+  if (glyphID->empty()) {
     return std::make_shared<GlyphSdf>();
   }
   return scalerContext->generateSdf(glyphID, fauxBold, fauxItalic);

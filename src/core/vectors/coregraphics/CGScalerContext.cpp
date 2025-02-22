@@ -149,7 +149,7 @@ Rect CGScalerContext::getBounds(GlyphID glyphID, bool fauxBold, bool fauxItalic)
 }
 
 Rect CGScalerContext::getBounds(GlyphIDArray glyphID, bool fauxBold, bool fauxItalic) const {
-  if (glyphID->unicodeSize() < 2) {
+  if (!glyphID->isCodePoints()) {
     return getBounds(glyphID->unicodes()[0], fauxBold, fauxItalic);
   }
   tgfx::Rect bounds = tgfx::Rect::MakeEmpty();
@@ -183,7 +183,7 @@ float CGScalerContext::getAdvance(GlyphID glyphID, bool verticalText) const {
 }
 
 float CGScalerContext::getAdvance(GlyphIDArray glyphID, bool verticalText) const {
-  if (glyphID->unicodeSize() < 2) {
+  if (!glyphID->isCodePoints()) {
     return getAdvance(glyphID->unicodes()[0], verticalText);
   }
   double advance = 0.0;
@@ -359,11 +359,8 @@ std::shared_ptr<GlyphSdf> CGScalerContext::generateSdf(GlyphIDArray glyphID, boo
 }
 
 bool CGScalerContext::excuteCodePoints(GlyphIDArray glyphID, std::function<void(CTLineRef CTLineRef)> func) const {
-  auto unicodes = glyphID->unicodes(); //复合emoji 多个utf32编码字符组合的
-  std::string text;
-  for (size_t i = 0; i < glyphID->unicodeSize(); i++) {
-    text += UTF::ToUTF8(unicodes[i]);
-  }
+  //复合emoji 多个utf32编码字符组合的
+  std::string text = UTF::ToUTF8(glyphID->unicodes(), glyphID->unicodeSize());
   CFStringRef cfText; CFAttributedStringRef attrString = nullptr;
   CTLineRef line = nullptr; CFArrayRef runs = nullptr;
   std::shared_ptr<PixelBuffer> pixelBuffer = nullptr;
@@ -403,6 +400,9 @@ bool CGScalerContext::excuteCodePoints(GlyphIDArray glyphID, std::function<void(
 
 std::shared_ptr<ImageBuffer> CGScalerContext::generateImage(GlyphIDArray glyphID,
                                                             bool tryHardware) const {
+  if (!glyphID->isCodePoints()) {
+    return generateImage(glyphID->unicodes()[0], tryHardware);
+  }
   std::shared_ptr<PixelBuffer> pixelBuffer;
   excuteCodePoints(glyphID, [&](CTLineRef line) {
     CGRect cgBounds = CTLineGetImageBounds(line, nullptr);

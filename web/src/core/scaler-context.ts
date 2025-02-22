@@ -55,6 +55,18 @@ export class ScalerContext {
         return emojiRegExp.test(text);
     }
 
+    public static splitCharacterSequences(str: string): string[] {
+      const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+      // 获取所有字形
+      const segments = Array.from(segmenter.segment(str), s => s.segment);
+      // 结果数组
+      const result: string[] = [];
+      for (const segment of segments) {
+          result.push(segment);
+      }
+      return result;
+    }
+    
     private static measureDirectly(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D): boolean {
         if (ScalerContext.hasMeasureBoundsAPI === undefined) {
             const metrics = ctx.measureText('x');

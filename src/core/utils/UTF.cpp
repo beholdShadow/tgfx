@@ -132,4 +132,13 @@ std::string UTF::ToUTF8(uint32_t unichar) {
   *--to = (char)(~(0xFF >> count) | unichar);
   return {utf8, count};
 }
+
+std::string UTF::ToUTF8(const uint32_t unichar[], size_t count) {
+  std::string text;
+  for (size_t i = 0; i < count; i++) {
+    text += UTF::ToUTF8(unichar[i]);
+  }
+  return text;
+}
+
 }  // namespace tgfx

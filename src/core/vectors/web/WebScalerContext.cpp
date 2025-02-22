@@ -20,6 +20,7 @@
 #include "WebTypeface.h"
 #include "core/utils/Log.h"
 #include "platform/web/WebImageBuffer.h"
+#include "tgfx/core/UTF.h"
 
 using namespace emscripten;
 
@@ -64,8 +65,22 @@ Rect WebScalerContext::getBounds(GlyphID glyphID, bool fauxBold, bool fauxItalic
   return scalerContext.call<Rect>("getBounds", getText(glyphID), fauxBold, fauxItalic);
 }
 
+Rect WebScalerContext::getBounds(GlyphIDArray glyphID, bool fauxBold, bool fauxItalic) const {
+  if (!glyphID->isCodePoints()) {
+    return getBounds(glyphID->unicodes()[0], fauxBold, fauxItalic);
+  }
+  return scalerContext.call<Rect>("getBounds", UTF::ToUTF8(glyphID->unicodes(), glyphID->unicodeSize()), fauxBold, fauxItalic);
+}
+
 float WebScalerContext::getAdvance(GlyphID glyphID, bool) const {
   return scalerContext.call<float>("getAdvance", getText(glyphID));
+}
+
+float WebScalerContext::getAdvance(GlyphIDArray glyphID, bool vertical) const {
+  if (!glyphID->isCodePoints()) {
+    return getAdvance(glyphID->unicodes()[0], vertical);
+  }
+  return scalerContext.call<float>("getAdvance", UTF::ToUTF8(glyphID->unicodes(), glyphID->unicodeSize()));
 }
 
 Point WebScalerContext::getVerticalOffset(GlyphID glyphID) const {
@@ -95,6 +110,19 @@ std::shared_ptr<ImageBuffer> WebScalerContext::generateImage(GlyphID glyphID, bo
     return nullptr;
   }
   auto buffer = scalerContext.call<val>("generateImage", getText(glyphID), bounds);
+  return WebImageBuffer::MakeAdopted(std::move(buffer));
+}
+
+std::shared_ptr<ImageBuffer> WebScalerContext::generateImage(GlyphIDArray glyphID, bool tryHardware) const {
+  if (!glyphID->isCodePoints()) {
+    return generateImage(glyphID->unicodes()[0], tryHardware);
+  }
+  std::string text =  UTF::ToUTF8(glyphID->unicodes(), glyphID->unicodeSize());
+  auto bounds = scalerContext.call<Rect>("getBounds", text, false, false);
+  if (bounds.isEmpty()) {
+    return nullptr;
+  }
+  auto buffer = scalerContext.call<val>("generateImage", text, bounds);
   return WebImageBuffer::MakeAdopted(std::move(buffer));
 }
 

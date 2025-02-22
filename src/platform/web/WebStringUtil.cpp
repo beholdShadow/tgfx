@@ -22,7 +22,11 @@
 namespace tgfx {
 std::vector<std::string> StringUtil::SplitFromPlatform(const std::string& text) {
     // 调用 JavaScript 的 split 方法
-    emscripten::val jsArray = emscripten::val::global("Array").call<emscripten::val>("from", text);
+    auto scalerContextClass = emscripten::val::module_property("ScalerContext");
+    if (!scalerContextClass.as<bool>()) {
+      return {};
+    }
+    emscripten::val jsArray = scalerContextClass.call<emscripten::val>("splitCharacterSequences", text);
     // 将 JavaScript 数组转换为 C++ vector
     std::vector<std::string> result;
     unsigned int length = jsArray["length"].as<unsigned int>();
