@@ -172,7 +172,7 @@ void RenderContext::drawGlyphRunList(std::shared_ptr<GlyphRunList> glyphRunList,
   auto proxyProvider = getContext()->proxyProvider();
   auto textureProxy =
       proxyProvider->createTextureProxy({}, rasterizer, false, opContext.renderFlags);
-  auto processor = TextureEffect::Make(std::move(textureProxy), {}, &rasterizeMatrix, true);
+  auto processor = TextureEffect::Make(std::move(textureProxy), SamplingOptions(FilterMode::Nearest), &rasterizeMatrix, true);
   if (processor == nullptr) {
     return;
   }
@@ -250,7 +250,7 @@ void RenderContext::drawColorGlyphs(std::shared_ptr<GlyphRunList> glyphRunList,
       glyphState.matrix.postTranslate(position.x, position.y);
       glyphState.matrix.postConcat(viewMatrix);
       auto rect = Rect::MakeWH(glyphImage->width(), glyphImage->height());
-      drawImageRect(std::move(glyphImage), rect, {}, glyphState, style);
+      drawImageRect(std::move(glyphImage), rect, SamplingOptions(FilterMode::Nearest), glyphState, style);
     }
   }
 }

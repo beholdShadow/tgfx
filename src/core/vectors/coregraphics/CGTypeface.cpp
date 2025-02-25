@@ -179,7 +179,7 @@ int CGTypeface::unitsPerEm() const {
   return ret;
 }
 
-static size_t ToUTF16(int32_t uni, uint16_t utf16[2]) {
+static size_t ToUTF16(uint32_t uni, uint16_t utf16[2]) {
   if ((uint32_t)uni > 0x10FFFF) {
     return 0;
   }

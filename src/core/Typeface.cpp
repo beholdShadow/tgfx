@@ -92,8 +92,8 @@ GlyphIDArray Typeface::getGlyphID(const std::string& name) const {
   const char* end =  start + name.size();
   std::vector<uint32_t> unicodes;
   while(count-- > 0) {
-    auto unichar = UTF::NextUTF8(&start, end);
-    unicodes.push_back(unichar);
+    auto unichar = std::max(UTF::NextUTF8(&start, end), 0);
+    unicodes.push_back(static_cast<Unichar>(unichar));
   }
   if (unicodes.size() > 1) {
     return Data::MakeWithCopy(unicodes.data(), unicodes.size() * sizeof(uint32_t));

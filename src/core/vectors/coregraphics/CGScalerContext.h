@@ -49,7 +49,7 @@ class CGScalerContext : public ScalerContext {
   std::shared_ptr<ImageBuffer> generateImage(GlyphID glyphID, bool tryHardware) const override;
   std::shared_ptr<ImageBuffer> generateImage(GlyphIDArray glyphID, bool tryHardware) const override;
   
-  std::shared_ptr<GlyphSdf> generateSdf(GlyphIDArray, bool, bool) const override;
+  std::shared_ptr<GlyphSdf> generateSdf(GlyphID, bool, bool) const override;
 private:
   bool excuteCodePoints(GlyphIDArray glyphID, std::function<void(CTLineRef CTLineRef)> func) const;
 private:

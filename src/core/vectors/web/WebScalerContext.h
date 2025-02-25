@@ -45,7 +45,7 @@ class WebScalerContext : public ScalerContext {
 
   std::shared_ptr<ImageBuffer> generateImage(GlyphIDArray glyphID, bool tryHardware) const override;
 
-  std::shared_ptr<GlyphSdf> generateSdf(GlyphIDArray, bool, bool) const override;
+  std::shared_ptr<GlyphSdf> generateSdf(GlyphID, bool, bool) const override;
  private:
   emscripten::val scalerContext = emscripten::val::null();
 

@@ -155,7 +155,6 @@ Rect CGScalerContext::getBounds(GlyphIDArray glyphID, bool fauxBold, bool fauxIt
   tgfx::Rect bounds = tgfx::Rect::MakeEmpty();
   excuteCodePoints(glyphID, [&](CTLineRef line) {
     CGRect cgBounds = CTLineGetImageBounds(line, nullptr);
-    CGFloat advance = CTLineGetTypographicBounds(line, NULL, NULL, NULL);
     bounds = Rect::MakeXYWH(static_cast<float>(cgBounds.origin.x),
                                  static_cast<float>(-cgBounds.origin.y - cgBounds.size.height),
                                  static_cast<float>(cgBounds.size.width),
@@ -352,9 +351,9 @@ std::shared_ptr<ImageBuffer> CGScalerContext::generateImage(GlyphID glyphID,
   return pixelBuffer;
 }
 
-std::shared_ptr<GlyphSdf> CGScalerContext::generateSdf(GlyphIDArray glyphID, bool fauxBold, bool fauxItalic) const {
+std::shared_ptr<GlyphSdf> CGScalerContext::generateSdf(GlyphID glyphID, bool fauxBold, bool fauxItalic) const {
   auto sdfInfo = std::make_shared<GlyphSdf>();
-  generatePath(glyphID->unicodes()[0], fauxBold, fauxItalic, &sdfInfo->path);
+  generatePath(glyphID, fauxBold, fauxItalic, &sdfInfo->path);
   return sdfInfo;
 }
 
@@ -406,7 +405,6 @@ std::shared_ptr<ImageBuffer> CGScalerContext::generateImage(GlyphIDArray glyphID
   std::shared_ptr<PixelBuffer> pixelBuffer;
   excuteCodePoints(glyphID, [&](CTLineRef line) {
     CGRect cgBounds = CTLineGetImageBounds(line, nullptr);
-    CGFloat advance = CTLineGetTypographicBounds(line, NULL, NULL, NULL);
     auto bounds = Rect::MakeXYWH(static_cast<float>(cgBounds.origin.x),
                                  static_cast<float>(-cgBounds.origin.y - cgBounds.size.height),
                                  static_cast<float>(cgBounds.size.width),

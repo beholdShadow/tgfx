@@ -126,7 +126,7 @@ std::shared_ptr<ImageBuffer> WebScalerContext::generateImage(GlyphIDArray glyphI
   return WebImageBuffer::MakeAdopted(std::move(buffer));
 }
 
-std::shared_ptr<GlyphSdf> WebScalerContext::generateSdf(GlyphIDArray, bool, bool) const {
+std::shared_ptr<GlyphSdf> WebScalerContext::generateSdf(GlyphID, bool, bool) const {
   auto sdfInfo = std::make_shared<GlyphSdf>();
   return sdfInfo;
 }

@@ -166,7 +166,7 @@ class Font {
    */
   std::shared_ptr<Image> getImage(GlyphID glyphID, Matrix* matrix) const;
   std::shared_ptr<Image> getImage(GlyphIDArray glyphID, Matrix* matrix) const;
-  std::shared_ptr<GlyphSdf> getSdf(GlyphIDArray glyphID) const;
+  std::shared_ptr<GlyphSdf> getSdf(GlyphID glyphID) const;
   /**
    * Compares two fonts for equality.
    */

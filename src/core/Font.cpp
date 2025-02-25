@@ -42,6 +42,27 @@ class GlyphImageGenerator : public ImageGenerator {
   GlyphID glyphID = 0;
 };
 
+class GlyphArrayImageGenerator : public ImageGenerator {
+ public:
+  GlyphArrayImageGenerator(int width, int height, std::shared_ptr<ScalerContext> scalerContext,
+                           GlyphIDArray glyphID)
+      : ImageGenerator(width, height), scalerContext(std::move(scalerContext)), glyphID(glyphID) {
+  }
+
+  bool isAlphaOnly() const override {
+    return !scalerContext->hasColor();
+  }
+
+ protected:
+  std::shared_ptr<ImageBuffer> onMakeBuffer(bool tryHardware) const override {
+    return scalerContext->generateImage(glyphID, tryHardware);
+  }
+
+ private:
+  std::shared_ptr<ScalerContext> scalerContext = nullptr;
+  GlyphIDArray glyphID = 0;
+};
+
 Font::Font() : scalerContext(ScalerContext::MakeEmpty(0.0f)) {
 }
 
@@ -172,11 +193,14 @@ std::shared_ptr<Image> Font::getImage(GlyphIDArray glyphID, Matrix* matrix) cons
   }
   auto bounds = scalerContext->getBounds(glyphID, fauxBold, fauxItalic);
   matrix->postTranslate(bounds.x(), bounds.y());
-  return Image::MakeFrom(scalerContext->generateImage(glyphID, true));
+  auto width = static_cast<int>(ceilf(bounds.width()));
+  auto height = static_cast<int>(ceilf(bounds.height()));
+  auto generator = std::make_shared<GlyphArrayImageGenerator>(width, height, scalerContext, glyphID);
+  return Image::MakeFrom(std::move(generator));
 }
 
-std::shared_ptr<GlyphSdf> Font::getSdf(GlyphIDArray glyphID) const {
-  if (glyphID->empty()) {
+std::shared_ptr<GlyphSdf> Font::getSdf(GlyphID glyphID) const {
+  if (glyphID <= 0) {
     return std::make_shared<GlyphSdf>();
   }
   return scalerContext->generateSdf(glyphID, fauxBold, fauxItalic);

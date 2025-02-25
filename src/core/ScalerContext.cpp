@@ -52,7 +52,7 @@ class EmptyScalerContext : public ScalerContext {
     return nullptr;
   }
   
-  std::shared_ptr<GlyphSdf> generateSdf(GlyphIDArray, bool, bool) const override {
+  std::shared_ptr<GlyphSdf> generateSdf(GlyphID, bool, bool) const override {
     return std::make_shared<GlyphSdf>();
   }
 };

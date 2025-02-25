@@ -14,7 +14,7 @@ std::vector<std::string> StringUtil::SplitFromPlatform(const std::string& text) 
     // 使用 NSString 的枚举方法处理字符
     [str enumerateSubstringsInRange:NSMakeRange(0, [str length])
                             options:NSStringEnumerationByComposedCharacterSequences
-                         usingBlock:^(NSString *substring, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
+                         usingBlock:^(NSString *substring, NSRange , NSRange , BOOL *) {
         std::string cStr = [substring UTF8String];
         result.push_back(cStr);
     }];

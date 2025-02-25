@@ -77,7 +77,7 @@ class ScalerContext {
     return nullptr;
   }
   
-  virtual std::shared_ptr<GlyphSdf> generateSdf(GlyphIDArray glyphID, bool fauxBold, bool fauxItalic) const = 0;
+  virtual std::shared_ptr<GlyphSdf> generateSdf(GlyphID glyphID, bool fauxBold, bool fauxItalic) const = 0;
  protected:
   // Note: This could be nullptr.
   std::shared_ptr<Typeface> typeface = nullptr;

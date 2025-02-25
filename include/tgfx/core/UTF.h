@@ -36,7 +36,7 @@ class UTF {
    * incremented to point at the next codepoint's start.  If invalid UTF-8 is encountered, set *ptr
    * to end and return -1.
    */
-  static uint32_t NextUTF8(const char** ptr, const char* end);
+  static int32_t NextUTF8(const char** ptr, const char* end);
 
   /**
    * Given a unicode codepoint, return the UTF-8 string.
