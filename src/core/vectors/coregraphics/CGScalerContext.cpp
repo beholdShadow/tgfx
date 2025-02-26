@@ -360,13 +360,13 @@ std::shared_ptr<GlyphSdf> CGScalerContext::generateSdf(GlyphID glyphID, bool fau
 bool CGScalerContext::excuteCodePoints(GlyphIDArray glyphID, std::function<void(CTLineRef CTLineRef)> func) const {
   //复合emoji 多个utf32编码字符组合的
   std::string text = UTF::ToUTF8(glyphID->unicodes(), glyphID->unicodeSize());
-  CFStringRef cfText; CFAttributedStringRef attrString = nullptr;
+  CFStringRef cfText = nullptr; CFAttributedStringRef attrString = nullptr;
   CTLineRef line = nullptr; CFArrayRef runs = nullptr;
-  std::shared_ptr<PixelBuffer> pixelBuffer = nullptr;
+  CFDictionaryRef attributes = nullptr;
   do {
     cfText = CFStringCreateWithCString(kCFAllocatorDefault, text.c_str(), kCFStringEncodingUTF8);
-    if (!cfText) return false;
-    CFDictionaryRef attributes = CFDictionaryCreate(
+    if (!cfText) { break; }
+    attributes = CFDictionaryCreate(
                                     kCFAllocatorDefault,
                                     (const void**)&kCTFontAttributeName,
                                     (const void**)&ctFont,
@@ -374,6 +374,7 @@ bool CGScalerContext::excuteCodePoints(GlyphIDArray glyphID, std::function<void(
                                     &kCFTypeDictionaryKeyCallBacks,
                                     &kCFTypeDictionaryValueCallBacks
                                 );
+    if (!attributes) { break; }
     attrString = CFAttributedStringCreate(kCFAllocatorDefault, cfText, attributes);
     if (!attrString) { break; }
     line = CTLineCreateWithAttributedString(attrString);
@@ -390,6 +391,9 @@ bool CGScalerContext::excuteCodePoints(GlyphIDArray glyphID, std::function<void(
   }
   if (attrString) {
     CFRelease(attrString);
+  }
+  if (attributes) {
+    CFRelease(attributes);
   }
   if (cfText) {
     CFRelease(cfText);

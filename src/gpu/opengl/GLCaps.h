@@ -138,8 +138,6 @@ class GLCaps : public Caps {
 
   int getMaxMipmapLevel(int width, int height) const override;
 
-  virtual bool getAttriubte(const std::string& key, void* result, unsigned int length) const override;
-  
   /**
    * Does the preferred MSAA FBO extension have MSAA renderBuffers?
    */

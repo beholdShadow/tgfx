@@ -239,27 +239,6 @@ int GLCaps::getMaxMipmapLevel(int width, int height) const {
   return static_cast<int>(std::log2(maxDimension));
 }
 
-bool GLCaps::getAttriubte(const std::string& key, void* result, unsigned int length) const {
-  if (!result) {
-    return false;
-  }
-  if (key == "vertexArrayObjectSupport") {
-    if (length < sizeof(vertexArrayObjectSupport)) {
-      return false;
-    }
-    *static_cast<bool*>(result) = vertexArrayObjectSupport;
-    return true;
-  }
-  if (key == "isDesktopGL") {
-    if (length < sizeof(bool)) {
-      return false;
-    }
-    *static_cast<bool*>(result) = standard == GLStandard::GL;
-    return true;
-  }
-  return false;
-}
-
 void GLCaps::initGLSupport(const GLInfo& info) {
   packRowLengthSupport = true;
   unpackRowLengthSupport = true;
