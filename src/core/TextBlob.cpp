@@ -34,7 +34,7 @@ std::shared_ptr<TextBlob> TextBlob::MakeFrom(const std::string& text, const Font
   auto emptyAdvance = font.getSize() / 2.0f;
   float xOffset = 0;
   while (textStart < textStop) {
-    auto unichar = UTF::NextUTF8(&textStart, textStop);
+    auto unichar = static_cast<Unichar>(std::max(UTF::NextUTF8(&textStart, textStop), 0));
     auto glyphID = font.getGlyphID(unichar);
     if (glyphID > 0) {
       glyphRun.glyphs.push_back(glyphID);

@@ -26,6 +26,11 @@ RuntimeEffect::RuntimeEffect(UniqueType type,
   uniqueType.addStrong();
 }
 
+bool RuntimeEffect::setExtraInputs(const std::vector<std::shared_ptr<Image>>& extraInputs) {
+  this->extraInputs = extraInputs;
+  return true;
+}
+
 RuntimeEffect::~RuntimeEffect() {
   uniqueType.releaseStrong();
 }

@@ -265,12 +265,12 @@ public:
     {
     }
 
-    explicit Vec4f( const float x, const float y, const float z, const float w ) :
+    Vec4f( const float x, const float y, const float z, const float w ) :
         x( x ), y( y ), z( z ), w( w )
     {
     }
 
-    explicit Vec4f( Vec3f v ) : x( v.x ), y( v.y ), z( v.z ), w( 1.0f )
+    Vec4f( Vec3f v ) : x( v.x ), y( v.y ), z( v.z ), w( 1.0f )
     {
     }
 
@@ -292,6 +292,11 @@ public:
     Vec4f operator*( const float f ) const
     {
         return Vec4f( x * f, y * f, z * f, w * f );
+    }
+
+    Vec4f operator*( const Vec4f f ) const
+    {
+        return Vec4f( x * f.x, y * f.y, z * f.z, w * f.w );
     }
 
     Vec4f operator/(const float f) const

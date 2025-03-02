@@ -50,6 +50,8 @@ class RuntimeEffect {
   explicit RuntimeEffect(UniqueType type,
                          const std::vector<std::shared_ptr<Image>>& extraInputs = {});
 
+  bool setExtraInputs(const std::vector<std::shared_ptr<Image>>& extraInputs);
+
   virtual ~RuntimeEffect();
 
   /**

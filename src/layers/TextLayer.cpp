@@ -289,7 +289,7 @@ std::vector<std::shared_ptr<TextLayer::GlyphInfo>> TextLayer::ShapeText(
   glyphInfos.reserve(text.size());
 
   while (head < tail) {
-    const auto characterUnicode = UTF::NextUTF8(&head, tail);
+    const auto characterUnicode = static_cast<Unichar>(std::max(UTF::NextUTF8(&head, tail), 0));
     if ('\n' == characterUnicode) {
       const GlyphID lineFeedCharacterGlyphID = nullptr != typeface ? typeface->getGlyphID('\n') : 0;
       glyphInfos.emplace_back(
