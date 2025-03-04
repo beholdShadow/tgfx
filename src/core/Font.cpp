@@ -32,6 +32,14 @@ class GlyphImageGenerator : public ImageGenerator {
     return !scalerContext->hasColor();
   }
 
+  bool asyncSupport() const override {
+    #if defined(TGFX_BUILD_FOR_WEB) //因为emoji都走平台渲染的，Rasterizer在web canvas渲染下必须在web的canvas线程，不能异步
+      return false;
+    #else
+      return true;
+    #endif
+  }
+
  protected:
   std::shared_ptr<ImageBuffer> onMakeBuffer(bool tryHardware) const override {
     return scalerContext->generateImage(glyphID, tryHardware);
@@ -51,6 +59,14 @@ class GlyphArrayImageGenerator : public ImageGenerator {
 
   bool isAlphaOnly() const override {
     return !scalerContext->hasColor();
+  }
+
+  bool asyncSupport() const override {
+    #if defined(TGFX_BUILD_FOR_WEB) //因为emoji都走平台渲染的，Rasterizer在web canvas渲染下必须在web的canvas线程，不能异步
+      return false;
+    #else
+      return true;
+    #endif
   }
 
  protected:

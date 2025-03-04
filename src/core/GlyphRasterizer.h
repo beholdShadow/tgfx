@@ -30,7 +30,15 @@ class GlyphRasterizer : public Rasterizer {
                   const Matrix& matrix, const Stroke* stroke);
 
   ~GlyphRasterizer() override;
-
+  
+  bool asyncSupport() const override {
+    #if defined(TGFX_BUILD_FOR_WEB)
+      return false;
+    #else
+      return true;
+    #endif
+  }
+  
  protected:
   std::shared_ptr<ImageBuffer> onMakeBuffer(bool tryHardware) const override;
 
