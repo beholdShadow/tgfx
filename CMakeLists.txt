@@ -18,7 +18,7 @@ option(TGFX_BUILD_DRAWERS "Build the tgfx-drawers library" OFF)
 option(EMSCRIPTEN_PTHREADS "Allow the use of threads on the web platform" OFF)
 option(TGFX_USE_FREETYPE "Allow the use of embedded freetype library" OFF)
 option(TGFX_FREETYPE_NATIVE "embedded freetype library with native" OFF)
-
+option(TGFX_UES_LAYER "Allow the use of tgfx layer" OFF)
 if (IOS)
     option(TGFX_USE_WEBP_DECODE "Enable embedded WEBP decoding support" ON)
 elseif (WEB)
@@ -100,8 +100,12 @@ file(GLOB_RECURSE SRC_FILES
         src/gpu/ops/*.*
         src/gpu/processors/*.*
         src/gpu/proxies/*.*
-        src/gpu/tasks/*.*
-        src/layers/*.*)
+        src/gpu/tasks/*.*)
+if (TGFX_UES_LAYER)
+  file(GLOB_RECURSE LAYER_FILES
+          src/layers/*.*)
+  list(APPEND TGFX_FILES ${LAYER_FILES})
+endif ()
 list(APPEND TGFX_FILES ${SRC_FILES})
 file(GLOB PLATFORM_COMMON_FILES
         src/core/*.*
